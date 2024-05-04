@@ -1,0 +1,173 @@
+#header_top_judul {
+    font-size: 18px;
+    color: #24695c;
+    font-weight: bold;
+}
+.page-main-header {
+    margin: 0 !important;
+    background-color: #fff !important;
+}
+.main-header-left {
+    height: 100% !important;
+    margin: 0 !important;
+    background-color: #111727 !important;
+}
+.btn_show_lampiran {
+    padding: 6px 0;
+    text-align: center;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    border-radius: 20px;
+    color: #fff;
+}
+
+.btn_simpan_detail_realisasi,
+.btn_back_detail_realisasi {
+    font-size: 17px;
+    font-weight: bold;
+}
+.btn_edit_opd {
+    margin-right: 10px;
+}
+.btn_tambah_opd,
+.btn_edit_opd,
+.btn_hapus_opd {
+    font-size: 16px !important;
+    font-weight: bold !important;
+}
+
+@media (max-width: 576px) {
+    #header_top_judul {
+        display: none !important;
+    }
+    .left-menu-header {
+        display: none !important;
+    }
+    .btn-data {
+        font-size: 10px !important;
+        padding: 0.3rem 1rem !important;
+    }
+    .btn-data > i {
+        font-size: 12px !important;
+        padding: 0 !important;
+    }
+    .main-nav {
+        width: 247.31px !important;
+    }
+    .btn_show_lampiran {
+        padding: 0.3rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        display: flex !important;
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        font-size: 12px;
+        border-radius: 20px;
+        color: #fff;
+    }
+    .btn_simpan_detail_realisasi,
+    .btn_back_detail_realisasi {
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .btn_edit_opd {
+        margin-left: 0 !important;
+        margin-bottom: 10px !important;
+    }
+    .btn_tambah_opd,
+    .btn_edit_opd,
+    .btn_hapus_opd {
+        font-size: 12px !important;
+        font-weight: bold !important;
+    }
+}
+@media (min-width: 576px) and (max-width: 768px) {
+    #header_top_judul {
+        display: none !important;
+    }
+    .btn-data {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        align-items: center !important;
+        font-size: 10px !important;
+        padding: 0.3rem 1rem !important;
+    }
+    .btn-data > i {
+        font-size: 12px !important;
+        padding: 0 !important;
+    }
+    .left-menu-header {
+        display: none !important;
+    }
+    .main-nav {
+        width: 267.31px !important;
+    }
+    .btn_show_lampiran {
+        padding: 0.3rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        display: flex !important;
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        font-size: 12px;
+        border-radius: 20px;
+        color: #fff;
+    }
+    .btn_simpan_detail_realisasi,
+    .btn_back_detail_realisasi {
+        font-size: 13px;
+        font-weight: bold;
+    }
+    .btn_edit_opd {
+        margin-left: 0 !important;
+        margin-bottom: 10px !important;
+    }
+    .btn_tambah_opd,
+    .btn_edit_opd,
+    .btn_hapus_opd {
+        font-size: 12px !important;
+        font-weight: bold !important;
+    }
+}
+@media (min-width: 768px) and (max-width: 992px) {
+    #header_top_judul {
+        font-size: 16px;
+        display: block;
+    }
+    .btn-data {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        align-items: center !important;
+        font-size: 14px !important;
+        padding: 0.3rem 1rem !important;
+    }
+    .btn-data > i {
+        font-size: 12px !important;
+        padding: 0 !important;
+    }
+}
+@media (min-width: 992px) {
+    #header_top_judul {
+        font-size: 18px;
+        display: block;
+    }
+    .btn-data {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        align-items: center !important;
+        font-size: 10px !important;
+        padding: 0.2rem 0.5rem !important;
+    }
+    .btn-data > i {
+        font-size: 12px !important;
+        padding: 0 !important;
+    }
+}
