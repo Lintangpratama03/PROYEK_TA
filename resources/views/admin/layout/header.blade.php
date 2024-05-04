@@ -14,7 +14,7 @@
         <div class="left-menu-header col">
             <ul>
                 <li>
-                    <h2 id="header_top_judul">Badan Pendapatan Daerah Kota Kenangan</h2>
+                    <h2 id="header_top_judul">Badan Pendapatan Daerah Kota Senyum</h2>
                 </li>
             </ul>
         </div>
