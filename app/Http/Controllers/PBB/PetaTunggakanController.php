@@ -11,7 +11,7 @@ class PetaTunggakanController extends Controller
     public function index()
     {
         $wilayah = DB::connection('pgsql_pbb')
-            ->table('data.wilayah')
+            ->table('data.wilayah_ta')
             ->select('kecamatan', 'kelurahan', DB::raw('ST_AsGeoJSON(geometry) as geometry'))
             ->get();
 
@@ -19,12 +19,12 @@ class PetaTunggakanController extends Controller
             ->table('data.detail_tunggakan')
             ->get();
 
-        // Inisialisasi variabel $kelurahanData
         $kelurahanData = [];
         foreach ($tunggakan as $item) {
             $kecamatan = $item->kecamatan;
             $kelurahan = $item->kelurahan;
             $level = $item->level;
+
             if (!isset($kelurahanData[$kecamatan][$kelurahan])) {
                 $kelurahanData[$kecamatan][$kelurahan] = [
                     'BERAT' => ['jumlah' => 0, 'nominal' => 0],
@@ -32,31 +32,10 @@ class PetaTunggakanController extends Controller
                     'RINGAN' => ['jumlah' => 0, 'nominal' => 0],
                 ];
             }
+
             $kelurahanData[$kecamatan][$kelurahan][$level]['jumlah'] += $item->jumlah_tunggakan;
             $kelurahanData[$kecamatan][$kelurahan][$level]['nominal'] += $item->nominal_tunggakan;
         }
-
-        // Inisialisasi variabel $sortedData
-        $sortedData = [];
-        foreach ($kelurahanData as $kecamatan => $kelurahan) {
-            foreach ($kelurahan as $nama => $data) {
-                $jumlahTunggakan = $data['BERAT']['jumlah'] + $data['SEDANG']['jumlah'] + $data['RINGAN']['jumlah'];
-                $nominalTunggakan = $data['BERAT']['nominal'] + $data['SEDANG']['nominal'] + $data['RINGAN']['nominal'];
-                $sortedData[] = [
-                    'kecamatan' => $kecamatan,
-                    'kelurahan' => $nama,
-                    'jumlah_tunggakan' => $jumlahTunggakan,
-                    'nominal_tunggakan' => $nominalTunggakan,
-                ];
-            }
-        }
-
-        usort($sortedData, function ($a, $b) {
-            if ($a['jumlah_tunggakan'] == $b['jumlah_tunggakan']) {
-                return $a['nominal_tunggakan'] > $b['nominal_tunggakan'] ? 1 : -1;
-            }
-            return $a['jumlah_tunggakan'] > $b['jumlah_tunggakan'] ? -1 : 1;
-        });
 
         $formattedWilayah = $wilayah->map(function ($item) use ($kelurahanData) {
             $kecamatan = $item->kecamatan;
@@ -68,19 +47,23 @@ class PetaTunggakanController extends Controller
             ];
             $geometry = $item->geometry;
 
+            $beratScore = $tunggakanData['BERAT']['jumlah'] * 0.5;
+            $sedangScore = $tunggakanData['SEDANG']['jumlah'] * 0.3;
+            $ringanScore = $tunggakanData['RINGAN']['jumlah'] * 0.2;
+            $totalScore = $beratScore + $sedangScore + $ringanScore;
+
             return [
                 'kecamatan' => $kecamatan,
                 'kelurahan' => $kelurahan,
                 'geometry' => $geometry,
                 'tunggakanData' => $tunggakanData,
-                'jumlahTunggakan' => array_sum(array_column($tunggakanData, 'jumlah')) // Total jumlah tunggakan
+                'totalScore' => $totalScore,
+                'jumlahTunggakan' => array_sum(array_column($tunggakanData, 'jumlah'))
             ];
-        });
-
-
-        $sortedData = collect($sortedData);
+        })->sortByDesc('totalScore');
+        $formattedWilayah = $formattedWilayah->values();
         // dd($formattedWilayah);
-        return view('admin.pbb.peta.peta', compact('formattedWilayah', 'sortedData'));
+        return view('admin.pbb.peta.peta', compact('formattedWilayah'));
     }
 
     public function create()
