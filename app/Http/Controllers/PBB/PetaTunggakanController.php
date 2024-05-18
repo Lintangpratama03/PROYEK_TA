@@ -16,7 +16,7 @@ class PetaTunggakanController extends Controller
             ->get();
 
         $tunggakan = DB::connection('pgsql_pbb')
-            ->table('data.detail_tunggakan')
+            ->table('data.v_detail_tunggakan_level_ta')
             ->get();
 
         $kelurahanData = [];
