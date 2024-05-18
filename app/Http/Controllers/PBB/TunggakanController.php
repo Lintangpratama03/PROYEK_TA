@@ -23,7 +23,6 @@ class TunggakanController extends Controller
             return view("admin.pbb.tunggakan");
         }
     }
-
     public function get_kec()
     {
         $data = DB::table("master.master_wilayah_ta")
@@ -39,131 +38,96 @@ class TunggakanController extends Controller
     public function datatable_tunggakan_nop(Request $request)
     {
         // dd($request->all());
-        $rekening = '4.';
-        $wilayah = $request->wilayah;
-
+        $kecamatan = $request->kecamatan;
+        $kelurahan = $request->kelurahan;
+        // dd($kecamatan, $kelurahan);
         $tahun = $request->input('tahun', []);
         if (!$tahun) {
             $tahun = [date('Y')];
         }
         // dd($wilayah);
         $view = '';
-        if (!is_null($wilayah)) {
-            if ($wilayah == 'Kelurahan') {
-                $view = '( SELECT tunggakan.tahun_sppt,
-                        CONCAT(tunggakan.kecamatan, \' - \', tunggakan.kelurahan) as wilayah,
-                        sum(tunggakan.nop_baku) AS nop_baku,
-                        sum(tunggakan.nop_bayar) AS nop_bayar,
-                        sum(tunggakan.nop_baku - tunggakan.nop_bayar) AS nop_tunggakan,
-                        sum(tunggakan.nominal_baku) AS nominal_baku,
-                        sum(tunggakan.nominal_pokok) AS nominal_pokok,
-                        sum(tunggakan.nominal_denda) AS nominal_denda,
-                        sum(tunggakan.nominal_terima) AS nominal_terima,
-                        sum(tunggakan.nominal_baku - tunggakan.nominal_terima) AS nominal_tunggakan
-                    FROM data.tunggakan
-                    GROUP BY tunggakan.tahun_sppt,tunggakan.kecamatan,tunggakan.kelurahan
-                    ORDER BY tunggakan.tahun_sppt, tunggakan.kecamatan DESC) AS a';
-            } elseif ($wilayah == 'Kecamatan') {
-                $view = '( SELECT tunggakan.tahun_sppt,
-                        tunggakan.kecamatan as wilayah,
-                        sum(tunggakan.nop_baku) AS nop_baku,
-                        sum(tunggakan.nop_bayar) AS nop_bayar,
-                        sum(tunggakan.nop_baku - tunggakan.nop_bayar) AS nop_tunggakan,
-                        sum(tunggakan.nominal_baku) AS nominal_baku,
-                        sum(tunggakan.nominal_pokok) AS nominal_pokok,
-                        sum(tunggakan.nominal_denda) AS nominal_denda,
-                        sum(tunggakan.nominal_terima) AS nominal_terima,
-                        sum(tunggakan.nominal_baku - tunggakan.nominal_terima) AS nominal_tunggakan
-                        FROM data.tunggakan
-                        GROUP BY tunggakan.tahun_sppt,tunggakan.kecamatan
-                        ORDER BY tunggakan.tahun_sppt, tunggakan.kecamatan DESC) AS a';
-            } else {
-                $view = '( SELECT tunggakan.tahun_sppt,
-                \'Kota Kenangan\' as wilayah,
-                sum(tunggakan.nop_baku) AS nop_baku,
-                sum(tunggakan.nop_bayar) AS nop_bayar,
-                sum(tunggakan.nop_baku - tunggakan.nop_bayar) AS nop_tunggakan,
-                sum(tunggakan.nominal_baku) AS nominal_baku,
-                sum(tunggakan.nominal_pokok) AS nominal_pokok,
-                sum(tunggakan.nominal_denda) AS nominal_denda,
-                sum(tunggakan.nominal_terima) AS nominal_terima,
-                sum(tunggakan.nominal_baku - tunggakan.nominal_terima) AS nominal_tunggakan
-                FROM data.tunggakan
-                GROUP BY tunggakan.tahun_sppt
-                ORDER BY tunggakan.tahun_sppt DESC) AS a';
-            }
-        } else {
-            $view = '( SELECT tunggakan.tahun_sppt,
-                \'Kota Kenangan\' as wilayah,
-                sum(tunggakan.nop_baku) AS nop_baku,
-                sum(tunggakan.nop_bayar) AS nop_bayar,
-                sum(tunggakan.nop_baku - tunggakan.nop_bayar) AS nop_tunggakan,
-                sum(tunggakan.nominal_baku) AS nominal_baku,
-                sum(tunggakan.nominal_pokok) AS nominal_pokok,
-                sum(tunggakan.nominal_denda) AS nominal_denda,
-                sum(tunggakan.nominal_terima) AS nominal_terima,
-                sum(tunggakan.nominal_baku - tunggakan.nominal_terima) AS nominal_tunggakan
-            FROM data.tunggakan
-            GROUP BY tunggakan.tahun_sppt
-            ORDER BY tunggakan.tahun_sppt DESC) AS a';
-        }
-        // dd($tahun);
-        $query = DB::table(DB::raw($view))
-            ->selectRaw("
-                a.tahun_sppt,
-                a.wilayah,
-                a.nop_baku,
-                a.nop_bayar,
-                a.nop_tunggakan,
-                a.nominal_baku,
-                a.nominal_pokok,
-                a.nominal_denda,
-                a.nominal_terima,
-                a.nominal_tunggakan
-            ")
-            ->whereIn('a.tahun_sppt', $tahun)
-            ->orderby("a.tahun_sppt", "DESC")
-            ->get();
+        $view = '( SELECT 
+            nop,
+            npwpd,
+            tahun,
+            bulan,
+            nama_rekening,
+            nominal_ketetapan,
+            nominal_denda,
+            nominal_tunggakan,
+            kecamatan,
+            kelurahan,
+            nama_subjek_pajak,
+            nama_objek_pajak
+        FROM data.detail_tunggakan_nop
+        GROUP BY 
+            nop,
+            npwpd,
+            tahun,
+            bulan,
+            nama_rekening,
+            nominal_ketetapan,
+            nominal_denda,
+            nominal_tunggakan,
+            kecamatan,
+            kelurahan,
+            nama_subjek_pajak,
+            nama_objek_pajak
+        ORDER BY tahun DESC) AS a';
 
-        // dd($query);  
+        // Execute the query
+        $query = DB::connection("pgsql_pbb")->table(DB::connection("pgsql_pbb")->raw($view))
+            ->selectRaw("
+                    a.nop,
+                    a.npwpd,
+                    a.tahun,
+                    a.bulan,
+                    a.nama_rekening,
+                    a.nominal_ketetapan,
+                    a.nominal_denda,
+                    a.nominal_tunggakan,
+                    a.kecamatan,
+                    a.kelurahan,
+                    a.nama_subjek_pajak,
+                    a.nama_objek_pajak
+                ")
+            ->whereIn('a.tahun', $tahun);
+        if (!is_null($kecamatan)) {
+            $query->where('a.kecamatan', $kecamatan);
+        }
+
+        if (!is_null($kelurahan)) {
+            $query->where('a.kelurahan', $kelurahan);
+        }
+
+        $query = $query->orderBy("a.tahun", "DESC")->get();
+
         // dd($query);
         $arr = array();
         if ($query->count() > 0) {
             foreach ($query as $key => $d) {
-                // $detail = " <a href='".route('pbb.tunggakan.detail')."' ><u>". number_format($d->nop_tunggakan) ." (detail)</u></a>";
-                $persen_nominal = ($d->nominal_terima > 0 && $d->nominal_baku > 0) ? round($d->nominal_terima / $d->nominal_baku * 100, 2) : 0;
-                $persen_nop = ($d->nop_bayar > 0 && $d->nop_baku > 0) ? round($d->nop_bayar / $d->nop_baku * 100, 2) : 0;
+                $route = url('pbb/tunggakan/sub_tunggakan_nop') . "/" . $d->nop;
+                $detail_nop = "<a target='_BLANK' href='" . $route . "' ><u>" . $d->nop . "</u> <i class='fa fa-arrow-circle-o-right'></i></a>";
 
-                if ($wilayah == 'Kelurahan') {
-                    $route = url('pbb/tunggakan/detail_tunggakan_nop') . "/" . $d->tahun_sppt . "/" . $wilayah . "/" . $d->wilayah;
-                } elseif ($wilayah == 'Kabupaten') {
-                    $route = url('pbb/tunggakan/sub_tunggakan_nop') . "/" . $d->tahun_sppt . "/" . $wilayah;
-                } else {
-                    $route = url('pbb/tunggakan/sub_tunggakan_nop') . "/" . $d->tahun_sppt . "/" . $wilayah . "/" . $d->wilayah;
-                }
-                $detail_nop = "<a target='_BLANK' href='" . $route . "' ><u>" . $d->wilayah . "</u> <i class='fa fa-arrow-circle-o-right'></i></a>";
-
-                $arr[] =
-                    array(
-                        "tahun" => $d->tahun_sppt,
-                        "wilayah" => $detail_nop,
-                        "nop_baku" => number_format($d->nop_baku),
-                        "nop_bayar" => number_format($d->nop_bayar),
-                        // "nop_tunggakan"=> $detail,
-                        "nop_tunggakan" => number_format($d->nop_tunggakan),
-                        "persen_nop" => $persen_nop . "%",
-                        "nominal_baku" => number_format($d->nominal_baku),
-                        "nominal_pokok" => number_format($d->nominal_pokok),
-                        "nominal_denda" => number_format($d->nominal_denda),
-                        "nominal_terima" => number_format($d->nominal_terima),
-                        "nominal_tunggakan" => number_format($d->nominal_tunggakan),
-                        "persen_nominal" => $persen_nominal . "%"
-                    );
+                $arr[] = array(
+                    "nop" => $detail_nop,
+                    "npwpd" => $d->npwpd,
+                    "tahun" => $d->tahun,
+                    "bulan" => $d->bulan,
+                    "nama_rekening" => $d->nama_rekening,
+                    "nominal_ketetapan" => number_format($d->nominal_ketetapan),
+                    "nominal_denda" => number_format($d->nominal_denda),
+                    "nominal_tunggakan" => number_format($d->nominal_tunggakan),
+                    "kecamatan" => $d->kecamatan,
+                    "kelurahan" => $d->kelurahan,
+                    "nama_subjek_pajak" => $d->nama_subjek_pajak,
+                    "nama_objek_pajak" => $d->nama_objek_pajak
+                );
             }
         }
         return Datatables::of($arr)
-            ->rawColumns(['nop_tunggakan'])
-            ->rawColumns(['wilayah'])
+            ->rawColumns(['nop'])
             ->make(true);
     }
 
@@ -173,7 +137,7 @@ class TunggakanController extends Controller
         $wilayah = $request->wilayah;
         if (!is_null($wilayah)) {
             if ($wilayah == 'Kelurahan') {
-                $query = DB::table("data.v_tunggakan_level")
+                $query = DB::connection("pgsql_pbb")->table("data.v_tunggakan_level_daerah")
                     ->selectRaw("CONCAT(kecamatan, ' - ', kelurahan) as wilayah,
                     sum(nominal_ringan) AS nominal_ringan,
                     sum(nominal_sedang) AS nominal_sedang,
@@ -189,7 +153,7 @@ class TunggakanController extends Controller
                     ->orderBy('kelurahan', 'ASC')
                     ->get();
             } elseif ($wilayah == 'Kecamatan') {
-                $query = DB::table("data.v_tunggakan_level")
+                $query = DB::connection("pgsql_pbb")->table("data.v_tunggakan_level_daerah")
                     ->selectRaw("kecamatan as wilayah,
                     sum(nominal_ringan) AS nominal_ringan,
                     sum(nominal_sedang) AS nominal_sedang,
@@ -203,8 +167,8 @@ class TunggakanController extends Controller
                     ->orderBy('kecamatan', 'ASC')
                     ->get();
             } else {
-                $query = DB::table("data.v_tunggakan_level")
-                    ->selectRaw(" 'Kota Kenangan' as wilayah,
+                $query = DB::connection("pgsql_pbb")->table("data.v_tunggakan_level_daerah")
+                    ->selectRaw(" 'Kota Senyum' as wilayah,
                     sum(nominal_ringan) AS nominal_ringan,
                     sum(nominal_sedang) AS nominal_sedang,
                     sum(nominal_berat) AS nominal_berat,
@@ -216,8 +180,8 @@ class TunggakanController extends Controller
                     ->get();
             }
         } else {
-            $query = DB::table("data.v_tunggakan_level")
-                ->selectRaw(" 'Kota Kenangan' as wilayah,
+            $query = DB::connection("pgsql_pbb")->table("data.v_tunggakan_level_daerah")
+                ->selectRaw(" 'Kota Senyum' as wilayah,
                 sum(nominal_ringan) AS nominal_ringan,
                 sum(nominal_sedang) AS nominal_sedang,
                 sum(nominal_berat) AS nominal_berat,
@@ -517,180 +481,86 @@ class TunggakanController extends Controller
             ->make(true);
     }
 
-    public function sub_tunggakan_nop($tahun, $wilayah, $nama_wilayah = null)
+    public function sub_tunggakan_nop($nop)
     {
-        // dd($tahun, $wilayah, $nama_wilayah);
-        $tahun = $tahun;
-        $wilayah = $wilayah;
-        $nama_wilayah = $nama_wilayah;
-        return view("admin.pbb.sub_tunggakan_nop")->with(compact('tahun', 'wilayah', 'nama_wilayah'));
+        $nop = $nop;
+        return view("admin.pbb.sub_tunggakan_nop")->with(compact('nop'));
     }
 
     public function datatable_sub_tunggakan_nop(Request $request)
     {
-        $tahun = $request->tahun;
+        $nop = $request->nop;
 
+        // dd($nop);
+        $view = '( SELECT 
+            nop,
+            npwpd,
+            kecamatan,
+            kelurahan,
+            no_telp,
+            email,
+            nama_subjek_pajak,
+            alamat_subjek_pajak,
+            nama_objek_pajak,
+            nama_rekening,
+            alamat_objek_pajak
+        FROM data.objek_pajak_ta
+        GROUP BY 
+            nop,
+            npwpd,
+            kecamatan,
+            kelurahan,
+            no_telp,
+            email,
+            nama_subjek_pajak,
+            alamat_subjek_pajak,
+            nama_objek_pajak,
+            nama_rekening,
+            alamat_objek_pajak
+        ORDER BY MAX(nop) DESC) AS a';
 
-        $wilayah = strtolower($request->wilayah);
-        // if($wilayah == 'kelurahan'){
-        //     $parts = Str::of($request->nama_wilayah)->explode(' - ');
-        //     $nama_wilayah = $parts[1];
-        //     // dd($parts);
-        // }else{
-        // }
-        $nama_wilayah = $request->nama_wilayah;
-
-        // dd($wilayah);
-        if ($wilayah == 'kabupaten') {
-            // dd("masuk kab");
-            // $view ='(
-            //     SELECT t.tahun_sppt,
-            //     t.uptd as wilayah,
-            //     sum(t.nop_baku) AS nop_baku,
-            //     sum(t.nop_bayar) AS nop_bayar,
-            //     sum(t.nop_tunggakan) AS nop_tunggakan,
-            //     sum(t.nominal_baku) AS nominal_baku,
-            //     sum(t.nominal_pokok) AS nominal_pokok,
-            //     sum(t.nominal_denda) AS nominal_denda,
-            //     sum(t.nominal_terima) AS nominal_terima,
-            //     sum(t.nominal_tunggakan) AS nominal_tunggakan
-            //     FROM data.tunggakan_nop_wilayah_uptd t
-            //     GROUP BY tahun_sppt , uptd 
-            //     ORDER BY tahun_sppt
-            // ) AS a';
-
-            // $query = DB::table(DB::raw($view))
-            // ->selectRaw("
-            //     a.tahun_sppt,
-            //     a.wilayah,
-            //     a.nop_baku,
-            //     a.nop_bayar,
-            //     a.nop_tunggakan,
-            //     a.nominal_baku,
-            //     a.nominal_pokok,
-            //     a.nominal_denda,
-            //     a.nominal_terima,
-            //     a.nominal_tunggakan
-            // ")
-            // ->where('a.tahun_sppt',$tahun)
-            // ->orderby("a.tahun_sppt", "DESC")
-            // ->get();
-            $view = '( SELECT tunggakan.tahun_sppt,
-            tunggakan.kecamatan as wilayah,
-            sum(tunggakan.nop_baku) AS nop_baku,
-            sum(tunggakan.nop_bayar) AS nop_bayar,
-            sum(tunggakan.nop_baku - tunggakan.nop_bayar) AS nop_tunggakan,
-            sum(tunggakan.nominal_baku) AS nominal_baku,
-            sum(tunggakan.nominal_pokok) AS nominal_pokok,
-            sum(tunggakan.nominal_denda) AS nominal_denda,
-            sum(tunggakan.nominal_terima) AS nominal_terima,
-            sum(tunggakan.nominal_baku - tunggakan.nominal_terima) AS nominal_tunggakan
-            FROM data.tunggakan
-            GROUP BY tunggakan.tahun_sppt,tunggakan.kecamatan
-            ORDER BY tunggakan.tahun_sppt, tunggakan.kecamatan DESC) AS a';
-
-            $query = DB::table(DB::raw($view))
-                ->selectRaw("
-                a.tahun_sppt,
-                a.wilayah,
-                a.nop_baku,
-                a.nop_bayar,
-                a.nop_tunggakan,
-                a.nominal_baku,
-                a.nominal_pokok,
-                a.nominal_denda,
-                a.nominal_terima,
-                a.nominal_tunggakan
-            ")
-                ->where('a.tahun_sppt', $tahun)
-                ->orderby("a.tahun_sppt", "DESC")
-                ->get();
-            // dd($query);
-        } elseif ($wilayah == 'kecamatan') {
-            // dd("masuk kec");
-            $view = '( SELECT tunggakan.tahun_sppt,
-                    tunggakan.kecamatan as kecamatan,
-                    CONCAT(tunggakan.kecamatan, \' - \', tunggakan.kelurahan) as wilayah,
-                    sum(tunggakan.nop_baku) AS nop_baku,
-                    sum(tunggakan.nop_bayar) AS nop_bayar,
-                    sum(tunggakan.nop_baku - tunggakan.nop_bayar) AS nop_tunggakan,
-                    sum(tunggakan.nominal_baku) AS nominal_baku,
-                    sum(tunggakan.nominal_pokok) AS nominal_pokok,
-                    sum(tunggakan.nominal_denda) AS nominal_denda,
-                    sum(tunggakan.nominal_terima) AS nominal_terima,
-                    sum(tunggakan.nominal_baku - tunggakan.nominal_terima) AS nominal_tunggakan
-                FROM data.tunggakan
-                GROUP BY tunggakan.tahun_sppt,tunggakan.kecamatan,tunggakan.kelurahan
-                ORDER BY tunggakan.tahun_sppt, tunggakan.kecamatan DESC) AS a';
-
-            $query = DB::table(DB::raw($view))
-                ->selectRaw("
-                    a.tahun_sppt,
-                    a.wilayah,
-                    a.nop_baku,
-                    a.nop_bayar,
-                    a.nop_tunggakan,
-                    a.nominal_baku,
-                    a.nominal_pokok,
-                    a.nominal_denda,
-                    a.nominal_terima,
-                    a.nominal_tunggakan
+        // Execute the query
+        $query = DB::connection("pgsql_pbb")->table(DB::connection("pgsql_pbb")->raw($view))
+            ->selectRaw("
+                    a.nop,
+                    a.npwpd,
+                    a.kecamatan,
+                    a.kelurahan,
+                    a.no_telp,
+                    a.email,
+                    a.nama_subjek_pajak,
+                    a.alamat_subjek_pajak,
+                    a.nama_objek_pajak,
+                    a.nama_rekening,
+                    a.alamat_objek_pajak
                 ")
-                ->where('a.tahun_sppt', $tahun)
-                ->where($wilayah, $nama_wilayah)
-                ->orderby("a.tahun_sppt", "DESC")
-                ->get();
-        }
-
+            ->where('a.nop', $nop)
+            ->get();
 
 
         // dd($query);
         $arr = array();
         // dd($query);
         if ($query->count() > 0) {
-            foreach ($query as $key => $d) {
-                // if ($wilayah == 'kelurahan'){
-                //     $route = url('pbb/tunggakan/detail_tunggakan_nop')."/".$d->tahun_sppt."/".$wilayah."/".$d->wilayah;
-                // }else
-                if ($wilayah == 'kecamatan') {
-                    $wilayahbaru = 'kelurahan';
-                    $route = url('pbb/tunggakan/detail_tunggakan_nop') . "/" . $d->tahun_sppt . "/" . $wilayahbaru . "/" . $d->wilayah;
-                } elseif ($wilayah == 'kabupaten') {
-                    $wilayahbaru = 'kecamatan';
-                    $route = url('pbb/tunggakan/sub_tunggakan_nop') . "/" . $d->tahun_sppt . "/" . $wilayahbaru . "/" . $d->wilayah;
-                    // $route = url('pbb/tunggakan/detail_tunggakan_nop')."/".$d->tahun_sppt."/".$wilayahbaru."/".$d->wilayah;
-                }
-                $detail_nop = "<a target='_BLANK' href='" . $route . "' ><u>" . $d->wilayah . "</u> <i class='fa fa-arrow-circle-o-right'></i></a>";
-
-                $persen_nominal = ($d->nominal_terima > 0 && $d->nominal_baku > 0) ? round($d->nominal_terima / $d->nominal_baku * 100, 2) : 0;
-                $persen_nop = ($d->nop_bayar > 0 && $d->nop_baku > 0) ? round($d->nop_bayar / $d->nop_baku * 100, 2) : 0;
-                $namawilayah = $detail_nop;
-                $nop_tunggakan = $d->nop_baku - $d->nop_bayar;
-                $nominal_tunggakan = $d->nominal_baku - $d->nominal_terima;
-
-                $arr[] =
-                    array(
-                        "tahun" => $d->tahun_sppt,
-                        "wilayah" => $namawilayah,
-                        "nop_baku" => number_format($d->nop_baku),
-                        "nop_bayar" => number_format($d->nop_bayar),
-                        // "nop_tunggakan"=> $detail,
-                        "nop_tunggakan" => number_format($nop_tunggakan),
-                        "persen_nop" => $persen_nop . "%",
-                        "nominal_baku" => number_format($d->nominal_baku),
-                        "nominal_pokok" => number_format($d->nominal_pokok),
-                        "nominal_denda" => number_format($d->nominal_denda),
-                        "nominal_terima" => number_format($d->nominal_terima),
-                        "nominal_tunggakan" => number_format($nominal_tunggakan),
-                        "persen_nominal" => $persen_nominal . "%"
-                    );
+            foreach ($query as $d) {
+                $arr[] = [
+                    'nop' => $d->nop,
+                    'npwpd' => $d->npwpd,
+                    'kecamatan' => $d->kecamatan,
+                    'kelurahan' => $d->kelurahan,
+                    'no_telp' => $d->no_telp,
+                    'email' => $d->email,
+                    'nama_subjek_pajak' => $d->nama_subjek_pajak,
+                    'alamat_subjek_pajak' => $d->alamat_subjek_pajak,
+                    'nama_objek_pajak' => $d->nama_objek_pajak,
+                    'alamat_objek_pajak' => $d->alamat_objek_pajak,
+                    'nama_rekening' => $d->nama_rekening,
+                ];
             }
         }
         // dd($arr);
 
         return Datatables::of($arr)
-            ->rawColumns(['nop_tunggakan'])
-            ->rawColumns(['wilayah'])
             ->make(true);
     }
 
@@ -884,7 +754,7 @@ class TunggakanController extends Controller
         // Menampilkan isi dari request
 
         $sismiop = DB::connection("pgsql_pbb")
-            ->table("data.detail_tunggakan")
+            ->table("data.v_detail_tunggakan_level_ta")
             ->where('level', $level);
 
         if ($wilayah == 'kecamatan') {
@@ -1024,9 +894,9 @@ class TunggakanController extends Controller
         // dd($sismiop);
 
         $sismiop = DB::connection("pgsql_pbb")
-            ->table("data.detail_tunggakan")
-            ->leftJoin("data.detail_objek_pajak_ta", "data.detail_tunggakan.nop", "=", "data.detail_objek_pajak_ta.nop")
-            ->where('data.detail_tunggakan.nop', $nop)
+            ->table("data.detail_tunggakan_ta")
+            ->leftJoin("data.objek_pajak_ta", "data.detail_tunggakan_ta.nop", "=", "data.objek_pajak_ta.nop")
+            ->where('data.detail_tunggakan_ta.nop', $nop)
             ->get();
         // dd($sismiop);
         $arr = array();
@@ -1034,8 +904,8 @@ class TunggakanController extends Controller
         foreach ($sismiop as $key => $d) {
             $arr[] =
                 array(
-                    "tahun_pajak" => $d->tahun_pajak,
-                    "nominal" => number_format($d->nominal_tunggakan),
+                    "tahun_pajak" => $d->tahun,
+                    "nominal" => number_format($d->nominal_ketetapan),
                     "nama_subjek_pajak" => $d->nama_subjek_pajak,
                     "alamat_subjek_pajak" => $d->alamat_subjek_pajak,
                     "nama_objek_pajak" => $d->nama_objek_pajak,
@@ -1052,19 +922,12 @@ class TunggakanController extends Controller
 
     public function get_wilayah(Request $request)
     {
-        // dd($request->wilayah);
-        $wilayah = $request->wilayah;
         $value = $request->data;
-        if ($wilayah == 'uptd') {
-            $data = DB::table("master.master_wilayah")
-                ->selectRaw("distinct(nama_kecamatan) as nama_kecamatan")
-                ->get();
-        } else {
-            $data = DB::table("master.master_wilayah")
-                ->selectRaw("distinct(nama_kelurahan) as kelurahan")
-                ->where("nama_kecamatan", $value)
-                ->get();
-        }
+        $data = DB::table("master.master_wilayah_ta")
+            ->selectRaw("distinct(nama_kelurahan) as kelurahan")
+            ->where("nama_kecamatan", $value)
+            ->get();
+        // dd($data);
         return response()->json($data);
     }
 }

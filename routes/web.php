@@ -140,8 +140,9 @@ Route::middleware($middleware_auth)->group(function () {
                 Route::get('/detail', 'PBB\TunggakanController@detail')->name('detail');
                 Route::get('/datatable_detail_tunggakan', 'PBB\TunggakanController@datatable_detail_tunggakan')->name('datatable_detail_tunggakan');
 
-                Route::get('sub_tunggakan_nop/{tahun}/{wilayah}/{nama_wilayah?}', 'PBB\TunggakanController@sub_tunggakan_nop')->name('sub_tunggakan_nop');
+                Route::get('sub_tunggakan_nop/{nop}', 'PBB\TunggakanController@sub_tunggakan_nop')->name('sub_tunggakan_nop');
                 Route::get('/datatable_sub_tunggakan_nop', 'PBB\TunggakanController@datatable_sub_tunggakan_nop')->name('datatable_sub_tunggakan_nop');
+
                 Route::get('detail_tunggakan_nop/{tahun}/{wilayah}/{nama_wilayah?}', 'PBB\TunggakanController@detail_tunggakan_nop')->name('detail_tunggakan_nop');
                 Route::get('/datatable_detail_tunggakan_nop', 'PBB\TunggakanController@datatable_detail_tunggakan_nop')->name('datatable_detail_tunggakan_nop');
 

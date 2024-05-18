@@ -24,11 +24,11 @@
             <div class="col-xl-12">
                 <div class="card o-hidden">
                     <div class="card-header pb-0">
-                        <h6>Penerimaan dan Tunggakan (NOP)</h6>
+                        <h6>Tunggakan (NOP)</h6>
                         <div class="row">
                             <div class="col-xl-12">
                                 <div class="row">
-                                    <div class="col-xl-5 mb-2 col-md-4 col-sm-6">
+                                    <div class="col-xl-3 mb-2 col-md-4 col-sm-6">
                                         <select name="tahun_all[]" id="tahun-all" class="form-control btn-square col-sm-12"
                                             multiple="multiple">
                                             @foreach (array_combine(range(date('Y'), 1900), range(date('Y'), 1900)) as $year)
@@ -36,16 +36,23 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="col-xl-5 mb-2 col-md-4 col-sm-6">
-                                        <select name="wilayah" id="wilayah"class="form-control btn-square "
+                                    <div class="col-xl-3 mb-2 col-md-4 col-sm-6">
+                                        <select name="kecamatan" id="kecamatan"
+                                            class="form-control btn-square js-example-basic-single col-sm-12 "
                                             style="border: 1px solid #808080;border-radius:5px;">
-                                            <option value="Kabupaten" class = "d-flex align-items-center">Pilih Kategori
-                                                Wilayah</option>
-                                            <option value="Kabupaten" class = "d-flex align-items-center">Kabupaten
+                                            <option value="" class = "d-flex align-items-center">Pilih Kecamatan
                                             </option>
-                                            <option value="Kecamatan" class = "d-flex align-items-center">Kecamatan
-                                            </option>
-                                            <option value="Kelurahan" class = "d-flex align-items-center">Kelurahan
+                                            @foreach (getKecamatan() as $item)
+                                                <option value="{{ $item->nama_kecamatan }}">{{ $item->nama_kecamatan }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-xl-3 mb-2 col-md-4 col-sm-6">
+                                        <select name="kelurahan"
+                                            id="kelurahan"class="form-control btn-square js-example-basic-single col-sm-12"
+                                            style="border: 1px solid #808080;">
+                                            <option value="" class = "d-flex align-items-center">Pilih Kelurahan
                                             </option>
                                         </select>
                                     </div>
@@ -62,26 +69,23 @@
                             <table class="table table-tunggakan-nop">
                                 <thead>
                                     <tr>
-                                        <th rowspan="2" style="text-align: center; vertical-align: middle;">Wilayah</th>
-                                        <th rowspan="2" style="text-align: center; vertical-align: middle;">Tahun SPPT
+                                        <th rowspan="2" style="text-align: center; vertical-align: middle;">NOP</th>
+                                        <th rowspan="2" style="text-align: center; vertical-align: middle;">Jenis Pajak
                                         </th>
-                                        <th colspan="4" style="text-align: center;background-color:#f3e8ae">Berdasarkan
-                                            NOP</th>
-                                        <th colspan="6" style="text-align: center;background-color:#cecece">Berdasarkan
-                                            Nominal</th>
+                                        <th colspan="4" style="text-align: center;background-color:#f3e8ae">
+                                            IDENTITAS</th>
+                                        <th colspan="3" style="text-align: center;background-color:#cecece">
+                                            NOMINAL</th>
 
                                     </tr>
                                     <tr>
-                                        <th>NOP Baku</th>
-                                        <th>NOP Bayar</th>
-                                        <th>NOP Tunggakan</th>
-                                        <th>Prosen</th>
-                                        <th>NOP Terbit</th>
-                                        <th>Penerimaan</th>
-                                        <th>Pokok</th>
+                                        <th>Nama</th>
+                                        <th>Nama Objek Pajak</th>
+                                        <th>Tahun</th>
+                                        <th>Bulan</th>
+                                        <th>Nominal Ketetapan</th>
                                         <th>Denda</th>
-                                        <th>Tunggakan</th>
-                                        <th>Prosen</th>
+                                        <th>Total Tunggakan</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -248,6 +252,36 @@
 
         const day = new Date();
         var currentYear = day.getFullYear();
+        var curKelurahan = $('#kelurahan').val();
+        var curKecamatan = $('#kecamatan').val();
+
+        function filterKel() {
+            $('#kecamatan').on('change', function() {
+                var kecamatan = this.value;
+                // console.log(kecamatan);
+                $("#kelurahan").html('');
+                $.ajax({
+                    url: '{{ route('pbb.tunggakan.get_wilayah') }}',
+                    type: "GET",
+                    data: {
+                        "wilayah": 'kecamatan',
+                        "data": kecamatan
+                    },
+                    dataType: 'json',
+                    success: function(result) {
+                        // console.log(result);
+                        $('#kelurahan').append(
+                            '<option value="" "class = "d-flex align-items-center">Pilih Kelurahan</option>'
+                        );
+                        $.each(result, function(key, value) {
+                            $("#kelurahan").append('<option value="' + value
+                                .kelurahan + '"class = "d-flex align-items-center">' + value
+                                .kelurahan + '</option>');
+                        });
+                    }
+                });
+            });
+        }
 
         function formatRupiah(angka) {
             var options = {
@@ -268,12 +302,13 @@
         }
 
         function filterWilayah() {
-            var wilayah = $('#wilayah').val();
+            var kecamatan = $('#kecamatan').val();
+            var kelurahan = $('#kelurahan').val();
             var tahun_all = $('#tahun-all').val();
             // console.log(wilayah);
-            if (wilayah !== null || tahun_all !== null) {
+            if (kecamatan !== null || tahun_all !== null || kelurahan !== null) {
                 $(".table-tunggakan-nop").DataTable().destroy();
-                table_tunggakan_nop(wilayah, tahun_all);
+                table_tunggakan_nop(kecamatan, kelurahan, tahun_all);
             }
         }
 
@@ -286,53 +321,8 @@
             }
         }
 
-        function filterWilayahBuku() {
-            $("#kecamatan").html('');
-            $.ajax({
-                url: '{{ route('pbb.tunggakan.get_wilayah') }}',
-                type: "GET",
-                data: {
-                    "wilayah": 'uptd',
-                },
-                dataType: 'json',
-                success: function(result) {
-                    // console.log(result);
-                    $('#kecamatan').append(
-                        '<option value="" "class = "d-flex align-items-center">Pilih Kecamatan</option>');
-                    $.each(result, function(key, value) {
-                        $("#kecamatan").append('<option value="' + value
-                            .nama_kecamatan + '"class = "d-flex align-items-center">' + value
-                            .nama_kecamatan + '</option>');
-                    });
-                }
-            });
-            $('#kecamatan').on('change', function() {
-                var kecamatan = this.value;
-                $("#kelurahan").html('');
-                $.ajax({
-                    url: '{{ route('pbb.tunggakan.get_wilayah') }}',
-                    type: "GET",
-                    data: {
-                        "wilayah": 'kecamatan',
-                        "data": kecamatan
-                    },
-                    dataType: 'json',
-                    success: function(result) {
-                        console.log(result);
-                        $('#kelurahan').append(
-                            '<option value="" "class = "d-flex align-items-center">Pilih Kelurahan</option>'
-                        );
-                        $.each(result, function(key, value) {
-                            $("#kelurahan").append('<option value="' + value
-                                .kelurahan + '"class = "d-flex align-items-center">' + value
-                                .kelurahan + '</option>');
-                        });
-                    }
-                });
-            });
-        }
 
-        function table_tunggakan_nop(wilayah = "Kabupaten", tahun = [currentYear]) {
+        function table_tunggakan_nop(kecamatan = curKecamatan, kelurahan = curKelurahan, tahun = [currentYear]) {
 
             var table = $(".table-tunggakan-nop").DataTable({
                 dom: "<'row'<'col-sm-12 col-md-3'l><'col-sm-12 col-md-6 text-center'B><'col-sm-12 col-md-3'>>" +
@@ -343,7 +333,7 @@
                     "extend": 'excel',
                     "text": '<i class="fa fa-file-excel-o" style="color: white;"> Export Excel</i>',
                     "titleAttr": 'Export to Excel',
-                    "filename": 'Penerimaan dan Tunggakan (NOP) PBB ',
+                    "filename": 'Tunggakan (NOP) PBB ',
                     "action": newexportaction
                 }, ],
                 processing: true,
@@ -354,45 +344,38 @@
                     url: '{{ route('pbb.tunggakan.datatable_tunggakan_nop') }}',
                     type: 'GET',
                     data: {
-                        "wilayah": wilayah,
+                        "kecamatan": kecamatan,
+                        "kelurahan": kelurahan,
                         "tahun": tahun
                     }
                 },
                 columns: [{
-                        data: 'wilayah',
-                        name: 'wilayah'
+                        data: 'nop',
+                        name: 'nop'
+                    },
+                    {
+                        data: 'nama_rekening',
+                        name: 'nama_rekening'
+                    },
+                    {
+                        data: 'nama_subjek_pajak',
+                        name: 'nama_subjek_pajak'
+                    },
+                    {
+                        data: 'nama_objek_pajak',
+                        name: 'nama_objek_pajak'
                     },
                     {
                         data: 'tahun',
                         name: 'tahun'
                     },
                     {
-                        data: 'nop_baku',
-                        name: 'nop_baku'
+                        data: 'bulan',
+                        name: 'bulan'
                     },
                     {
-                        data: 'nop_bayar',
-                        name: 'nop_bayar'
-                    },
-                    {
-                        data: 'nop_tunggakan',
-                        name: 'nop_tunggakan'
-                    },
-                    {
-                        data: 'persen_nop',
-                        name: 'persen_nop'
-                    },
-                    {
-                        data: 'nominal_baku',
-                        name: 'nominal_baku'
-                    },
-                    {
-                        data: 'nominal_terima',
-                        name: 'nominal_terima'
-                    },
-                    {
-                        data: 'nominal_pokok',
-                        name: 'nominal_pokok'
+                        data: 'nominal_ketetapan',
+                        name: 'nominal_ketetapan'
                     },
                     {
                         data: 'nominal_denda',
@@ -402,10 +385,6 @@
                         data: 'nominal_tunggakan',
                         name: 'nominal_tunggakan'
                     },
-                    {
-                        data: 'persen_nominal',
-                        name: 'persen_nominal'
-                    }
                 ],
                 order: [
                     [0, 'desc']
@@ -531,10 +510,10 @@
             $("#tahun-all").select2({
                 placeholder: "Pilih Tahun (Bisa Multi Tahun)"
             });
+            filterKel();
             table_tunggakan_nop();
             table_pembayaran_tunggakan();
             table_tunggakan_level();
-            filterWilayahBuku();
         })
     </script>
 @endsection

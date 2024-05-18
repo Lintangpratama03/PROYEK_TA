@@ -169,8 +169,8 @@ function getJenisPajakSimpadamav2()
 
 function getKecamatan()
 {
-    $data = DB::table("data.tunggakan_buku")
-        ->selectRaw("distinct(kecamatan) as kecamatan")
+    $data = DB::table("master.master_wilayah_ta")
+        ->selectRaw("distinct(nama_kecamatan) as nama_kecamatan")
         ->get();
     return $data;
 }

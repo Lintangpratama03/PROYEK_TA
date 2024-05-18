@@ -6,55 +6,72 @@
     <div class="container-fluid">
         <div class="page-header">
             <div class="row">
-                <div class="col-sm-6">
+                <div class="col-sm-">
                     <h3>Peta Tunggakan PBB</h3>
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="#">PBB</a></li>
                         <li class="breadcrumb-item active">Peta Tunggakan</li>
                     </ol>
                 </div>
-                <div class="col-sm-12">
-                    <div id="map"></div>
-                    <style>
-                        #map {
-                            height: 800px;
-                            position: relative;
-                        }
 
-                        #map-title {
-                            position: absolute;
-                            top: 10px;
-                            left: 10px;
-                            background-color: rgba(255, 255, 255, 0.8);
-                            padding: 5px 10px;
-                            border-radius: 5px;
-                            z-index: 1000;
-                        }
-
-                        #map-legend {
-                            position: absolute;
-                            bottom: 10px;
-                            right: 10px;
-                            background-color: rgba(255, 255, 255, 0.8);
-                            padding: 10px;
-                            border-radius: 5px;
-                            z-index: 1000;
-                        }
-                    </style>
-                    <div id="map-title">
-                        <h4>Jumlah Total Tunggakan</h4>
-                        <p>Berat: {{ $formattedWilayah->sum('tunggakanData.BERAT.jumlah') }}</p>
-                        <p>Sedang: {{ $formattedWilayah->sum('tunggakanData.SEDANG.jumlah') }}</p>
-                        <p>Ringan: {{ $formattedWilayah->sum('tunggakanData.RINGAN.jumlah') }}</p>
-                    </div>
-                    <div id="map-legend">
-                        <p>Persentase Parah: 50% Berat + 30% Sedang + 20% Ringan</p>
-                        <p><span style="color: #800000; font-weight: bold;">Merah:</span> Persentase Parah Terbanyak</p>
-                        <p><span style="color: #808000; font-weight: bold;">Kuning:</span> Persentase Parah Sedang</p>
-                        <p><span style="color: #008000; font-weight: bold;">Hijau:</span> Persentase Parah Sedikit</p>
-                    </div>
-                </div>
             </div>
+        </div>
+    </div>
+    <div class="col-sm-12">
+        <button id="toggleMap" class="btn btn-map-on">Turn Map Off</button>
+    </div>
+    <br>
+    <div class="col-sm-12">
+        <div id="map"></div>
+        <style>
+            .btn-map-on {
+                background-color: #28a745;
+                /* Hijau */
+                color: white;
+            }
+
+            .btn-map-off {
+                background-color: #dc3545;
+                /* Merah */
+                color: white;
+            }
+
+            #map {
+                height: 800px;
+                position: relative;
+            }
+
+            #map-title {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                background-color: rgba(255, 255, 255, 0.8);
+                padding: 5px 10px;
+                border-radius: 5px;
+                z-index: 1000;
+            }
+
+            #map-legend {
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+                background-color: rgba(255, 255, 255, 0.8);
+                padding: 10px;
+                border-radius: 5px;
+                z-index: 1000;
+            }
+        </style>
+        <div id="map-title">
+            <h4>Jumlah Total Tunggakan</h4>
+            <p>Berat: {{ $formattedWilayah->sum('tunggakanData.BERAT.jumlah') }}</p>
+            <p>Sedang: {{ $formattedWilayah->sum('tunggakanData.SEDANG.jumlah') }}</p>
+            <p>Ringan: {{ $formattedWilayah->sum('tunggakanData.RINGAN.jumlah') }}</p>
+        </div>
+        <div id="map-legend">
+            <p>Persentase Parah: 50% Berat + 30% Sedang + 20% Ringan</p>
+            <p><span style="color: #e60e0e; font-weight: bold;">Merah:</span> Persentase Parah Terbanyak</p>
+            <p><span style="color: #e4e412; font-weight: bold;">Kuning:</span> Persentase Parah Sedang</p>
+            <p><span style="color: #008000; font-weight: bold;">Hijau:</span> Persentase Parah Sedikit</p>
         </div>
     </div>
 @endsection
@@ -69,14 +86,32 @@
     <script>
         var map = L.map('map').setView([-7.894834, 110.152936], 12);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
+        var toggleButton = document.getElementById('toggleMap');
+
+        function toggleMapLayer() {
+            if (map.hasLayer(osmLayer)) {
+                map.removeLayer(osmLayer);
+                toggleButton.classList.remove('btn-map-on');
+                toggleButton.classList.add('btn-map-off');
+                toggleButton.textContent = 'Turn Map On';
+            } else {
+                osmLayer.addTo(map);
+                toggleButton.classList.remove('btn-map-off');
+                toggleButton.classList.add('btn-map-on');
+                toggleButton.textContent = 'Turn Map Off';
+            }
+        }
+
+        toggleButton.addEventListener('click', toggleMapLayer);
+
         var totalData = {{ $formattedWilayah->count() }};
         var sortedData = {!! $formattedWilayah->sortByDesc('totalScore')->values() !!};
-        var redThreshold = Math.ceil(totalData * 0.2); // Top 20% get red color
-        var yellowThreshold = Math.ceil(totalData * 0.6); // Next 40% get yellow color
+        var redThreshold = Math.ceil(totalData * 0.2);
+        var yellowThreshold = Math.ceil(totalData * 0.6);
 
         @foreach ($formattedWilayah as $key => $wilayah)
             var geometry = {!! $wilayah['geometry'] !!};
@@ -95,7 +130,7 @@
             if (rank <= redThreshold) {
                 color = '#800000';
             } else if (rank <= yellowThreshold) {
-                color = '#808000';
+                color = '#e4e412';
             } else {
                 color = '#008000';
             }
