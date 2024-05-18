@@ -160,16 +160,16 @@
                 <div>
                     <div class="card o-hidden">
                         <div class="card-header pb-0">
-                            <h6>Pembayaran Tunggakan</h6>
+                            <h6>5 Tunggakan Paling Tinggi (NOP)</h6>
                         </div>
                         <div class="card-body">
                             <div class="mb-3 draggable">
                                 <div class="input-group">
                                     <input type="hidden" id="tunggakan" value="tunggakan">
-                                    <select name="role_code" id="tahun" class="form-control btn-square">
+                                    <select name="role_code" id="tahun_v" class="form-control btn-square">
                                         <option value="">Pilih Tahun SPPT</option>
                                         {{-- <input type="text" id="default_date" value="{{ date('Y') - 1}}"> --}}
-                                        @foreach (array_combine(range(date('Y') - 1, 1900), range(date('Y') - 1, 1900)) as $year)
+                                        @foreach (array_combine(range(date('Y'), 1970), range(date('Y'), 1970)) as $year)
                                             <option value="{{ $year }}">{{ $year }}</option>
                                         @endforeach
                                     </select>
@@ -183,9 +183,10 @@
                                 <table class="table table-sm dtTable">
                                     <thead>
                                         <tr>
-                                            <th>Tahun Pembayaran</th>
-                                            <th>Nominal Bayar</th>
-                                            <th>NOP Bayar</th>
+                                            <th>#</th>
+                                            <th>NOP</th>
+                                            <th>Jumlah Tunggakan</th>
+                                            <th>Nominal Tunggakan</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -294,7 +295,7 @@
         }
 
         function filterTahun() {
-            var tahun = $('#tahun').val();
+            var tahun = $('#tahun_v').val();
             if (tahun !== null) {
                 $(".dtTable").DataTable().destroy();
                 table_pembayaran_tunggakan(tahun);
@@ -453,15 +454,6 @@
         }
 
         function table_pembayaran_tunggakan(tahun = null) {
-            if (tahun !== null) {
-                var selectedYear = parseInt(tahun);
-                tahun = (selectedYear + 1).toString();
-            }
-            // else{
-            //     var currentDate = new Date();
-            //     tahun = currentDate.getFullYear() - 1;
-            //     console.log(tahun);
-            // }
             var id = $('#tunggakan').val();
             let table = $(".dtTable").DataTable({
                 dom: "<'row'<'col-sm-12 col-md-3'l><'col-sm-12 col-md-6 text-center'B><'col-sm-12 col-md-3'>>" +
@@ -472,7 +464,7 @@
                     "extend": 'excel',
                     "text": '<i class="fa fa-file-excel-o" style="color: white;"> Export Excel</i>',
                     "titleAttr": 'Export to Excel',
-                    "filename": 'Pembayaran Tunggakan PBB ',
+                    "filename": '5 Tertinggi Tunggakan PBB ',
                     "action": newexportaction
                 }, ],
                 processing: true,
@@ -480,7 +472,7 @@
                 responsive: true,
                 searchDelay: 2000,
                 ajax: {
-                    url: "{{ route('pbb.tunggakan.datatable_pembayaran_tunggakan') }}",
+                    url: "{{ route('pbb.tunggakan.datatable_tunggakan_paling_tinggi') }}",
                     type: 'GET',
                     data: {
                         "tahun": tahun,
@@ -488,20 +480,23 @@
                     }
                 },
                 columns: [{
-                        data: 'tahun',
-                        name: 'tahun'
+                        data: 'no',
+                        name: 'no'
+                    }, {
+                        data: 'nop',
+                        name: 'nop'
+                    },
+                    {
+                        data: 'jumlah_tunggakan',
+                        name: 'jumlah_tunggakan'
                     },
                     {
                         data: 'nominal',
                         name: 'nominal'
                     },
-                    {
-                        data: 'nop',
-                        name: 'nop'
-                    }
                 ],
                 order: [
-                    [0, 'desc']
+                    [0, 'asc']
                 ],
             });
         }

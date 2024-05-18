@@ -134,7 +134,7 @@ Route::middleware($middleware_auth)->group(function () {
                 Route::get('/datatable_tunggakan_nop', 'PBB\TunggakanController@datatable_tunggakan_nop')->name('datatable_tunggakan_nop');
                 Route::get('/datatable_tunggakan_nominal', 'PBB\TunggakanController@datatable_tunggakan_nominal')->name('datatable_tunggakan_nominal');
                 Route::get('/datatable_tunggakan_level', 'PBB\TunggakanController@datatable_tunggakan_level')->name('datatable_tunggakan_level');
-                Route::get('/datatable_pembayaran_tunggakan', 'PBB\TunggakanController@datatable_pembayaran_tunggakan')->name('datatable_pembayaran_tunggakan');
+                Route::get('/datatable_tunggakan_paling_tinggi', 'PBB\TunggakanController@datatable_tunggakan_paling_tinggi')->name('datatable_tunggakan_paling_tinggi');
                 Route::get('/datatable_tunggakan_buku', 'PBB\TunggakanController@datatable_tunggakan_buku')->name('datatable_tunggakan_buku');
 
                 Route::get('/detail', 'PBB\TunggakanController@detail')->name('detail');
@@ -154,8 +154,8 @@ Route::middleware($middleware_auth)->group(function () {
                 Route::get('detail_tunggakan_buku/{buku}/{tahun}/{kecamatan}/{kelurahan}', 'PBB\TunggakanController@detail_tunggakan_buku')->name('detail_tunggakan_buku');
                 Route::get('/datatable_detail_tunggakan_buku', 'PBB\TunggakanController@datatable_detail_tunggakan_buku')->name('datatable_detail_tunggakan_buku');
 
-                Route::get('detail_pembayaran_tunggakan/{tahun_sppt}/{tahun_bayar}', 'PBB\TunggakanController@detail_pembayaran_tunggakan')->name('detail_pembayaran_tunggakan');
-                Route::get('datatable_detail_pembayaran_tunggakan', 'PBB\TunggakanController@datatable_detail_pembayaran_tunggakan')->name('datatable_detail_pembayaran_tunggakan');
+                Route::get('detail_tunggakan_paling_tinggi/{nop}/{tahun}', 'PBB\TunggakanController@detail_tunggakan_paling_tinggi')->name('detail_tunggakan_paling_tinggi');
+                Route::get('datatable_detail_tunggakan_paling_tinggi', 'PBB\TunggakanController@datatable_detail_tunggakan_paling_tinggi')->name('datatable_detail_tunggakan_paling_tinggi');
 
                 Route::get('detail_pembayaran_tunggakan_wp/{tahun_sppt}/{tahun_bayar}/{kecematan}/{kelurahan}', 'PBB\TunggakanController@detail_pembayaran_tunggakan_wp')->name('detail_pembayaran_tunggakan_wp');
                 Route::get('datatable_pembayaran_tunggakan_wp', 'PBB\TunggakanController@datatable_pembayaran_tunggakan_wp')->name('datatable_pembayaran_tunggakan_wp');

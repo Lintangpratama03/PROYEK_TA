@@ -259,86 +259,88 @@ class TunggakanController extends Controller
             ->make(true);
     }
 
-    public function datatable_pembayaran_tunggakan(Request $request)
+    public function datatable_tunggakan_paling_tinggi(Request $request)
     {
+        // dd($request->tahun);
         $tahun = $request->tahun ?? date('Y');
-        $currentYear = Carbon::now()->format('Y');
-        $select = ' SUM(nominal_terima) AS nominal, SUM(nop) AS nop, tahun_bayar';
 
         // dd($tahun);
         if (!is_null($request->tahun)) {
-            // dd("masuk1");
-            $d_data = DB::table("data.penerimaan_tahun_sppt")
-                ->whereBetween('tahun_sppt', [$tahun, $currentYear])
-                ->groupBy('tahun_bayar')
-                ->orderBy('tahun_bayar', 'DESC')
-                ->select(DB::raw($select))->get();
+            // Fetching records for a range between requested year and the current year
+            $d_data = DB::connection("pgsql_pbb")->table("data.v_detail_tunggakan_level_ta")
+                ->where('tahun_pajak', $tahun)
+                ->select('tahun_pajak', DB::raw('SUM(jumlah_tunggakan) as total_tunggakan'), 'kecamatan', 'kelurahan', 'nop', 'nominal_tunggakan')
+                ->groupBy('tahun_pajak', 'kecamatan', 'kelurahan', 'nop', 'nominal_tunggakan')
+                ->orderBy('total_tunggakan', 'DESC')
+                ->orderBy('tahun_pajak', 'DESC')
+                ->limit(5)
+                ->get();
         } else {
-            // dd("masuk2");
-            $d_data = DB::table("data.penerimaan_tahun_sppt")
-                ->groupBy('tahun_bayar')
-                ->orderBy('tahun_bayar', 'DESC')
-                ->select(DB::raw($select))->get();
+            // Fetching records for all years
+            $d_data = DB::connection("pgsql_pbb")->table("data.v_detail_tunggakan_level_ta")
+                ->select('tahun_pajak', DB::raw('SUM(jumlah_tunggakan) as total_tunggakan'), 'kecamatan', 'kelurahan', 'nop', 'nominal_tunggakan')
+                ->groupBy('tahun_pajak', 'kecamatan', 'kelurahan', 'nop', 'nominal_tunggakan')
+                ->orderBy('total_tunggakan', 'DESC')
+                ->orderBy('tahun_pajak', 'DESC')
+                ->limit(5)
+                ->get();
         }
-
+        // dd($d_data);
 
         $arr = array();
         if ($d_data->count() > 0) {
+            $no = 1;  // Inisialisasi counter untuk nomor urut
             foreach ($d_data as $key => $d) {
-                $route = url('pbb/tunggakan/detail_pembayaran_tunggakan') . "/" . $d->tahun_bayar . "/" . $tahun;
-                $detail_nop = "<a target='_BLANK' href='" . $route . "' ><u>" . number_format($d->nop) . "</u> <i class='fa fa-arrow-circle-o-right'></i></a>";
-                $arr[] =
-                    array(
-                        "tahun" => $d->tahun_bayar,
-                        "nominal" => rupiahFormat($d->nominal),
-                        "nop" => $detail_nop
-                    );
+                $route = url('pbb/tunggakan/detail_tunggakan_paling_tinggi') . "/" . $d->nop . "/" . $tahun;
+                $detail = "<a target='_BLANK' href='" . $route . "' ><u>" . number_format($d->total_tunggakan) . "</u> <i class='fa fa-arrow-circle-o-right'></i></a>";
+                $arr[] = array(
+                    "no" => $no++,  // Tambahkan nomor urut yang bertambah setiap iterasi
+                    "nop" => $d->nop,
+                    "jumlah_tunggakan" => $detail,
+                    "nominal" => rupiahFormat($d->nominal_tunggakan)
+                );
             }
         }
-
         return Datatables::of($arr)
-            ->rawColumns(['nop'])
+            ->rawColumns(['jumlah_tunggakan'])
             ->make(true);
     }
 
-    public function detail_pembayaran_tunggakan($tahun_bayar, $tahun_sppt)
+    public function detail_tunggakan_paling_tinggi($nop, $tahun)
     {
-        // dd($tahun, $wilayah, $nama_wilayah);
-        $tahun_sppt = $tahun_sppt;
-        $tahun_bayar = $tahun_bayar;
-        return view("admin.pbb.detail_pembayaran_tunggakan")->with(compact('tahun_sppt', 'tahun_bayar'));
+        $tahun = $tahun;
+        $nop = $nop;
+        return view("admin.pbb.detail_tunggakan_paling_tinggi")->with(compact('nop', 'tahun'));
     }
 
-    public function datatable_detail_pembayaran_tunggakan(Request $request)
+    public function datatable_detail_tunggakan_paling_tinggi(Request $request)
     {
-        $tahun_sppt = $request->tahun_sppt;
-        $tahun_bayar = $request->tahun_bayar;
+        $nop = $request->nop;
+        $tahun = $request->tahun;
 
-        // dd($tahun_sppt,$tahun_bayar);   
-
-        $query_sismiop = "
-            select x.*, nm_kecamatan,nm_kelurahan from (
-            SELECT KD_KECAMATAN,KD_KELURAHAN,COUNT(KD_KECAMATAN) jumlah FROM PEMBAYARAN_SPPT
-            where EXTRACT(YEAR FROM TGL_PEMBAYARAN_SPPT)=" . $tahun_bayar . " and cast(REGEXP_REPLACE(THN_PAJAK_SPPT, '[^0-9]+', '') as int) = " . $tahun_sppt . "
-            group by KD_KECAMATAN,KD_KELURAHAN
-            ) x
-            left join REF_KECAMATAN kec on x.KD_KECAMATAN = kec.KD_KECAMATAN
-            left join REF_KELURAHAN kel on  x.KD_KECAMATAN = kel.KD_KECAMATAN and x.KD_KELURAHAN = kel.KD_KELURAHAN
+        $query = "
+            SELECT * 
+            FROM \"data\".\"detail_tunggakan_nop\"
+            WHERE \"nop\" = :nop AND \"tahun\" = :tahun
         ";
 
-        $sismiop = DB::connection("oracle")->select($query_sismiop);
-
+        // Menjalankan query dengan DB facade dan memasukkan hasilnya ke dalam variabel
+        $results = DB::connection('pgsql_pbb')->select($query, ['nop' => $nop, 'tahun' => $tahun]);
+        // dd($results);
         $arr = array();
-        // if($sismiop->count() > 0){
-        foreach ($sismiop as $key => $d) {
-            $route = url('pbb/tunggakan/detail_pembayaran_tunggakan_wp') . "/" . $tahun_sppt . "/" . $tahun_bayar . "/" . $d->kd_kecamatan . "/" . $d->kd_kelurahan;
-            $detail = "<a target='_BLANK' href='" . $route . "' ><u>" . number_format($d->jumlah) . "</u> <i class='fa fa-arrow-circle-o-right'></i></a>";
-            $arr[] =
-                array(
-                    "kecamatan" => $d->nm_kecamatan,
-                    "kelurahan" => $d->nm_kelurahan,
-                    "pembayaran" => $detail
-                );
+        // if($tinggi->count() > 0){
+        foreach ($results as $key => $d) {
+            $arr[] = array(
+                "nama_subjek_pajak" => $d->nama_subjek_pajak,
+                "nama_objek_pajak" => $d->nama_objek_pajak,
+                "nama_rekening" => $d->nama_rekening,
+                "kecamatan" => $d->kecamatan,
+                "kelurahan" => $d->kelurahan,
+                "bulan" => $d->bulan,
+                "nominal_ketetapan" => $d->nominal_ketetapan,
+                "nominal_denda" => $d->nominal_denda,
+                "nominal_tunggakan" => $d->nominal_tunggakan
+            );
         }
         // }
         // dd($arr);
