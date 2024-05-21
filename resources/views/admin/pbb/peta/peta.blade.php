@@ -13,7 +13,6 @@
                         <li class="breadcrumb-item active">Peta Tunggakan</li>
                     </ol>
                 </div>
-
             </div>
         </div>
     </div>
@@ -63,24 +62,60 @@
                 }
             </style>
             <div id="map-title">
-                <h4>Jumlah Total Tunggakan</h4>
-                <p>Berat: {{ $formattedWilayah->sum('tunggakanData.BERAT.jumlah') }}</p>
-                <p>Sedang: {{ $formattedWilayah->sum('tunggakanData.SEDANG.jumlah') }}</p>
-                <p>Ringan: {{ $formattedWilayah->sum('tunggakanData.RINGAN.jumlah') }}</p>
+                <h4>Peta Kota Senyum</h4>
             </div>
             <div id="map-legend">
-                <p>Persentase Parah: 50% Berat + 30% Sedang + 20% Ringan</p>
-                <p><span style="color: #e60e0e; font-weight: bold;">Merah:</span> Persentase Parah Terbanyak</p>
-                <p><span style="color: #e4e412; font-weight: bold;">Kuning:</span> Persentase Parah Sedang</p>
-                <p><span style="color: #008000; font-weight: bold;">Hijau:</span> Persentase Parah Sedikit</p>
+                <ul>
+                    <ul>
+                        <li><span class="color-box green">Hijau:</span> Daerah dengan jumlah
+                            tunggakan
+                            nop dibawah rata-rata dan nominal tunggakan dibawah rata-rata.</li><br>
+                        <li><span class="color-box yellow">Kuning:</span> Daerah dengan jumlah
+                            tunggakan(nop)
+                            dibawah rata-rata dan nominal tunggakan diatas rata-rata.</li><br>
+                        <li><span class="color-box orange">Orange:</span> Daerah dengan jumlah
+                            tunggakan(nop)
+                            diatas rata-rata dan nominal dibawah rata-rata.</li><br>
+                        <li><span class="color-box red">Merah:</span> Daerah dengan jumlah
+                            tunggakan(nop)
+                            diatas rata-rata dan nominal diatas rata-rata.</li>
+                    </ul>
+                    <style>
+                        .color-box {
+                            display: inline-block;
+                            padding: 2px;
+                            font-weight: bold;
+                        }
+
+                        .yellow {
+                            background-color: #FFFF00;
+                            color: black;
+                        }
+
+                        .green {
+                            background-color: #00FF00;
+                            color: black;
+                        }
+
+                        .orange {
+                            background-color: #fd9a29;
+                            color: black;
+                        }
+
+                        .red {
+                            background-color: #FF0000;
+                            color: white;
+                        }
+                    </style>
+                    <div id="legend-items"></div>
             </div>
         </div>
-        <div class="col-sm-8">
-
+        <div class="col-sm-4">
+            <!-- Konten lainnya -->
         </div>
     </div>
-
 @endsection
+
 @section('js')
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -89,6 +124,8 @@
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script>
+
     <script>
         var map = L.map('map').setView([-7.629523, 111.532680], 14);
 
@@ -114,44 +151,61 @@
 
         toggleButton.addEventListener('click', toggleMapLayer);
 
-        var totalData = {{ $formattedWilayah->count() }};
-        var sortedData = {!! $formattedWilayah->sortByDesc('totalScore')->values() !!};
-        var redThreshold = Math.ceil(totalData * 0.2);
-        var yellowThreshold = Math.ceil(totalData * 0.6);
+        // Mengambil data dari controller
+        var data = @json($query_total);
 
-        @foreach ($formattedWilayah as $key => $wilayah)
-            var geometry = {!! $wilayah['geometry'] !!};
-            var tunggakanData = {!! json_encode($wilayah['tunggakanData']) !!};
-            var popupContent = '<b>Kec :</b> {{ $wilayah['kecamatan'] }}<br>' +
-                '<b>Kel :</b> {{ $wilayah['kelurahan'] }}<br><br>' +
-                '<b>Data Tunggakan</b><br>' +
-                'Berat : ' + tunggakanData.BERAT.jumlah + '<br>' +
-                'Sedang : ' + tunggakanData.SEDANG.jumlah + '<br>' +
-                'Ringan : ' + tunggakanData.RINGAN.jumlah + '<br>';
-            var color;
-            var rank = sortedData.findIndex(function(item) {
-                return item.kecamatan === '{{ $wilayah['kecamatan'] }}' && item.kelurahan ===
-                    '{{ $wilayah['kelurahan'] }}';
-            }) + 1;
-            if (rank <= redThreshold) {
-                color = '#800000';
-            } else if (rank <= yellowThreshold) {
-                color = '#e4e412';
-            } else {
-                color = '#008000';
-            }
-            L.geoJSON(geometry, {
-                style: function(feature) {
-                    return {
-                        fillColor: color,
-                        weight: 2,
-                        opacity: 1,
-                        color: 'white',
-                        dashArray: '3',
-                        fillOpacity: 0.7
-                    };
+        // Membuat layer GeoJSON dari data
+        var geoJsonLayer = L.geoJson(data.map(function(feature) {
+            return {
+                type: 'Feature',
+                geometry: JSON.parse(feature.geometry),
+                properties: {
+                    kecamatan: feature.kecamatan,
+                    kelurahan: feature.kelurahan,
+                    total_jumlah_tunggakan: feature.total_jumlah_tunggakan,
+                    total_nominal_tunggakan: feature.total_nominal_tunggakan,
+                    total_jumlah_nop: feature.total_jumlah_nop,
+                    backgroundColor: feature.backgroundColor,
+                    borderColor: feature.borderColor,
+                    cluster: feature.cluster
                 }
-            }).addTo(map).bindPopup(popupContent);
-        @endforeach
+            };
+        }), {
+            style: function(feature) {
+                return {
+                    fillColor: feature.properties.backgroundColor,
+                    fillOpacity: 0.6,
+                    color: feature.properties.borderColor,
+                    weight: 2
+                }
+            },
+            onEachFeature: function(feature, layer) {
+                layer.bindPopup(`
+            <strong>Kecamatan:</strong> ${feature.properties.kecamatan}<br>
+            <strong>Kelurahan:</strong> ${feature.properties.kelurahan}<br>
+            <strong>Total Tunggakan:</strong> ${feature.properties.total_jumlah_tunggakan}<br>
+            <strong>Total Nominal Tunggakan:</strong> Rp ${feature.properties.total_nominal_tunggakan.toLocaleString()}<br>
+            <strong>Total NOP(Menunggak):</strong> ${feature.properties.total_jumlah_nop}
+        `);
+            }
+        }).addTo(map);
+
+        // Membuat legenda
+        var legend = L.control({
+            position: 'bottomright'
+        });
+        legend.onAdd = function(map) {
+            var div = L.DomUtil.create('div', 'info legend');
+            var grades = ['Hijau', 'Kuning', 'Orange', 'Merah'];
+            var labels = [];
+
+            grades.forEach(function(grade, index) {
+                var backgroundColor = data[0][grade.toLowerCase() + 'Color'];
+                div.innerHTML += `<i style="background-color: ${backgroundColor}"></i> ${grade}<br>`;
+            });
+
+            return div;
+        };
+        legend.addTo(map);
     </script>
 @endsection

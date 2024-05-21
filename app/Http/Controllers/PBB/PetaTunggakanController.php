@@ -10,83 +10,62 @@ class PetaTunggakanController extends Controller
 {
     public function index()
     {
-        $wilayah = DB::connection('pgsql_pbb')
-            ->table('data.wilayah_ta')
-            ->select('kecamatan', 'kelurahan', DB::raw('ST_AsGeoJSON(geometry) as geometry'))
+        $query_total = DB::connection("pgsql_pbb")
+            ->table("v_tunggakan_level_daerah")
+            ->selectRaw("
+                v_tunggakan_level_daerah.kecamatan,
+                v_tunggakan_level_daerah.kelurahan,
+                v_tunggakan_level_daerah.total_nominal_tunggakan,
+                v_tunggakan_level_daerah.total_jumlah_tunggakan,
+                v_tunggakan_level_daerah.total_jumlah_nop,
+                wilayah_geometri.geometry
+            ")
+            ->leftJoinSub(
+                DB::connection("pgsql_pbb")
+                    ->table("data.wilayah_ta")
+                    ->selectRaw("kecamatan, kelurahan, ST_AsGeoJSON(geometry) as geometry"),
+                "wilayah_geometri",
+                function ($join) {
+                    $join->on("v_tunggakan_level_daerah.kecamatan", "=", "wilayah_geometri.kecamatan")
+                        ->on("v_tunggakan_level_daerah.kelurahan", "=", "wilayah_geometri.kelurahan");
+                }
+            )
+            ->orderBy("kecamatan", "DESC")
             ->get();
 
-        $tunggakan = DB::connection('pgsql_pbb')
-            ->table('data.v_detail_tunggakan_level_ta')
-            ->get();
+        $avg_nop = $query_total->avg('total_jumlah_nop');
+        $avg_nominal = $query_total->avg('total_nominal_tunggakan');
 
-        $kelurahanData = [];
-        foreach ($tunggakan as $item) {
-            $kecamatan = $item->kecamatan;
-            $kelurahan = $item->kelurahan;
-            $level = $item->level;
+        foreach ($query_total as $row) {
+            $cluster = '';
+            $backgroundColor = '';
+            $borderColor = '';
 
-            if (!isset($kelurahanData[$kecamatan][$kelurahan])) {
-                $kelurahanData[$kecamatan][$kelurahan] = [
-                    'BERAT' => ['jumlah' => 0, 'nominal' => 0],
-                    'SEDANG' => ['jumlah' => 0, 'nominal' => 0],
-                    'RINGAN' => ['jumlah' => 0, 'nominal' => 0],
-                ];
+            if ($row->total_jumlah_nop < $avg_nop && $row->total_nominal_tunggakan < $avg_nominal) {
+                $cluster = 'Hijau';
+                $backgroundColor = 'rgba(0, 255, 0, 0.6)';
+                $borderColor = 'rgba(0, 255, 0, 1)';
+            } elseif ($row->total_jumlah_nop < $avg_nop && $row->total_nominal_tunggakan >= $avg_nominal) {
+                $cluster = 'Kuning';
+                $backgroundColor = 'rgba(255, 255, 0, 0.6)';
+                $borderColor = 'rgba(255, 255, 0, 1)';
+            } elseif ($row->total_jumlah_nop > $avg_nop && $row->total_nominal_tunggakan <= $avg_nominal) {
+                $cluster = 'Orange';
+                $backgroundColor = 'rgba(255, 165, 0, 0.6)';
+                $borderColor = 'rgba(255, 165, 0, 1)';
+            } elseif ($row->total_jumlah_nop > $avg_nop && $row->total_nominal_tunggakan >= $avg_nominal) {
+                $cluster = 'Merah';
+                $backgroundColor = 'rgba(255, 0, 0, 0.6)';
+                $borderColor = 'rgba(255, 0, 0, 1)';
             }
 
-            $kelurahanData[$kecamatan][$kelurahan][$level]['jumlah'] += $item->jumlah_tunggakan;
-            $kelurahanData[$kecamatan][$kelurahan][$level]['nominal'] += $item->nominal_tunggakan;
+            $row->cluster = $cluster;
+            $row->backgroundColor = $backgroundColor;
+            $row->borderColor = $borderColor;
         }
-
-        $formattedWilayah = $wilayah->map(function ($item) use ($kelurahanData) {
-            $kecamatan = $item->kecamatan;
-            $kelurahan = $item->kelurahan;
-            $tunggakanData = $kelurahanData[$kecamatan][$kelurahan] ?? [
-                'BERAT' => ['jumlah' => 0, 'nominal' => 0],
-                'SEDANG' => ['jumlah' => 0, 'nominal' => 0],
-                'RINGAN' => ['jumlah' => 0, 'nominal' => 0]
-            ];
-            $geometry = $item->geometry;
-
-            $beratScore = $tunggakanData['BERAT']['jumlah'] * 0.5;
-            $sedangScore = $tunggakanData['SEDANG']['jumlah'] * 0.3;
-            $ringanScore = $tunggakanData['RINGAN']['jumlah'] * 0.2;
-            $totalScore = $beratScore + $sedangScore + $ringanScore;
-
-            return [
-                'kecamatan' => $kecamatan,
-                'kelurahan' => $kelurahan,
-                'geometry' => $geometry,
-                'tunggakanData' => $tunggakanData,
-                'totalScore' => $totalScore,
-                'jumlahTunggakan' => array_sum(array_column($tunggakanData, 'jumlah'))
-            ];
-        })->sortByDesc('totalScore');
-        $formattedWilayah = $formattedWilayah->values();
-        // dd($formattedWilayah);
-        return view('admin.pbb.peta.peta', compact('formattedWilayah'));
+        // dd($query_total);
+        return view('admin.pbb.peta.peta', compact('query_total'));
     }
 
-    public function create()
-    {
-    }
-
-    public function store(Request $request)
-    {
-    }
-
-    public function show($id)
-    {
-    }
-
-    public function edit($id)
-    {
-    }
-
-    public function update(Request $request, $id)
-    {
-    }
-
-    public function destroy($id)
-    {
-    }
+    // ... (Sisa kode tidak diubah)
 }
