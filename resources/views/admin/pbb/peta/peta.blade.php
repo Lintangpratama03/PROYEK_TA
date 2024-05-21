@@ -111,7 +111,16 @@
             </div>
         </div>
         <div class="col-sm-4">
-            <!-- Konten lainnya -->
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Detail Tunggakan Wilayah</h4>
+                </div>
+                <div class="card-body">
+                    <div id="detail-wilayah">
+                        <!-- Konten detail akan ditampilkan di sini -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -207,5 +216,18 @@
             return div;
         };
         legend.addTo(map);
+        geoJsonLayer.on('click', function(e) {
+            var layer = e.layer;
+            var props = layer.feature.properties;
+
+            // Tampilkan detail di panel
+            $('#detail-wilayah').html(`
+                <strong>Kecamatan:</strong> ${props.kecamatan}<br>
+                <strong>Kelurahan:</strong> ${props.kelurahan}<br>
+                <strong>Total Tunggakan:</strong> ${props.total_jumlah_tunggakan}<br>
+                <strong>Total Nominal Tunggakan:</strong> Rp ${props.total_nominal_tunggakan.toLocaleString()}<br>
+                <strong>Total NOP(Menunggak):</strong> ${props.total_jumlah_nop}
+            `);
+        });
     </script>
 @endsection
