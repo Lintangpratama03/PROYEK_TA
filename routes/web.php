@@ -160,6 +160,14 @@ Route::middleware($middleware_auth)->group(function () {
                 Route::get('detail_pembayaran_tunggakan_wp/{tahun_sppt}/{tahun_bayar}/{kecematan}/{kelurahan}', 'PBB\TunggakanController@detail_pembayaran_tunggakan_wp')->name('detail_pembayaran_tunggakan_wp');
                 Route::get('datatable_pembayaran_tunggakan_wp', 'PBB\TunggakanController@datatable_pembayaran_tunggakan_wp')->name('datatable_pembayaran_tunggakan_wp');
             });
+            Route::prefix('cluster-tunggakan')->name('cluster.')->group(function () {
+                Route::get('/', 'PBB\ClusterTunggakanController@index')->name('index');
+                Route::get('/get_wilayah', 'PBB\ClusterTunggakanController@get_wilayah')->name('get_wilayah');
+                Route::get('/datatable_tunggakan_wilayah', 'PBB\ClusterTunggakanController@datatable_tunggakan_wilayah')->name('datatable_tunggakan_wilayah');
+                Route::get('/datatable_tunggakan_wilayah_cluster', 'PBB\ClusterTunggakanController@datatable_tunggakan_wilayah_cluster')->name('datatable_tunggakan_wilayah_cluster');
+                Route::get('/data_tunggakan_wilayah_cluster', 'PBB\ClusterTunggakanController@data_tunggakan_wilayah_cluster')->name('data_tunggakan_wilayah_cluster');
+                Route::get('/datatable_tunggakan_cluster_hasil', 'PBB\ClusterTunggakanController@datatable_tunggakan_cluster_hasil')->name('datatable_tunggakan_cluster_hasil');
+            });
             Route::prefix('peta-tunggakan')->name('peta-tunggakan.')->group(function () {
                 Route::get('/', 'PBB\PetaTunggakanController@index')->name('index');
             });
