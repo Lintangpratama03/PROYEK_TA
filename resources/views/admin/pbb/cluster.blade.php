@@ -115,18 +115,12 @@
                                     <h6>Keterangan:</h6>
                                     <ul>
                                         <ul>
-                                            <li><span class="color-box green">Hijau:</span> Cluster dengan jumlah
-                                                tunggakan
-                                                nop dibawah rata-rata dan nominal tunggakan dibawah rata-rata.</li><br>
-                                            <li><span class="color-box yellow">Kuning:</span> Cluster dengan jumlah
-                                                tunggakan(nop)
-                                                dibawah rata-rata dan nominal tunggakan diatas rata-rata.</li><br>
-                                            <li><span class="color-box orange">Orange:</span> Cluster dengan jumlah
-                                                tunggakan(nop)
-                                                diatas rata-rata dan nominal dibawah rata-rata.</li><br>
-                                            <li><span class="color-box red">Merah:</span> Cluster dengan jumlah
-                                                tunggakan(nop)
-                                                diatas rata-rata dan nominal diatas rata-rata.</li>
+                                            <li><span class="color-box green">Hijau:</span> Cluster dengan prioritas
+                                                penagihan rendah.</li><br>
+                                            <li><span class="color-box yellow">Kuning:</span> Cluster dengan prioritas
+                                                penagihan sedang.</li><br>
+                                            <li><span class="color-box red">Merah:</span> Cluster dengan prioritas penagihan
+                                                tinggi.</li>
                                         </ul>
                                         <style>
                                             .color-box {
@@ -230,6 +224,7 @@
                                         <th style="text-align: center;">Jumlah NOP</th>
                                         <th style="text-align: center;">Jumlah Tunggakan</th>
                                         <th style="text-align: center;">Nominal Tunggakan</th>
+                                        <th style="text-align: center;">Rekomendasi</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -515,17 +510,36 @@
                         name: 'kelurahan'
                     },
                     {
-                        data: 'jumlah',
-                        name: 'jumlah'
+                        data: 'total_jumlah_nop',
+                        name: 'total_jumlah_nop'
                     },
                     {
-                        data: 'jumlah_tunggakan',
-                        name: 'jumlah_tunggakan'
+                        data: 'total_jumlah_tunggakan',
+                        name: 'total_jumlah_tunggakan'
                     },
                     {
-                        data: 'nominal',
-                        name: 'nominal'
+                        data: 'total_nominal_tunggakan',
+                        name: 'total_nominal_tunggakan'
                     },
+                    {
+                        data: 'rekomendasi',
+                        name: 'rekomendasi',
+                        render: function(data, type, row) {
+                            let rekomendasi = '';
+                            switch (row.cluster) {
+                                case 'Hijau':
+                                    rekomendasi = 'Prioritas penagihan rendah';
+                                    break;
+                                case 'Kuning':
+                                    rekomendasi = 'Prioritas penagihan sedang';
+                                    break;
+                                case 'Merah':
+                                    rekomendasi = 'Prioritas penagihan tinggi';
+                                    break;
+                            }
+                            return rekomendasi;
+                        }
+                    }
                 ],
 
                 order: [
@@ -555,23 +569,37 @@
                 },
                 dataType: 'json',
                 success: function(data) {
-                    data.sort((a, b) => a.total_jumlah_nop - b.total_jumlah_nop || a.total_nominal_tunggakan - b
-                        .total_nominal_tunggakan);
-                    const clusterLabels = ['Hijau', 'Kuning', 'Orange', 'Merah'];
-                    const clusters = [
-                        [],
-                        [],
-                        [],
-                        []
+                    const clusterColors = [{
+                            label: 'Hijau',
+                            backgroundColor: 'rgba(0, 128, 0, 0.6)',
+                            borderColor: 'rgba(0, 128, 0, 1)'
+                        },
+                        {
+                            label: 'Kuning',
+                            backgroundColor: 'rgba(255, 255, 0, 0.6)',
+                            borderColor: 'rgba(255, 255, 0, 1)'
+                        },
+                        {
+                            label: 'Merah',
+                            backgroundColor: 'rgba(255, 0, 0, 0.6)',
+                            borderColor: 'rgba(255, 0, 0, 1)'
+                        }
                     ];
-                    data.forEach((item) => {
-                        let clusterIndex = clusterLabels.indexOf(item.cluster);
-                        clusters[clusterIndex].push({
-                            x: item.total_jumlah_nop,
+
+                    const datasets = clusterColors.map(color => ({
+                        label: color.label,
+                        data: [],
+                        backgroundColor: color.backgroundColor,
+                        borderColor: color.borderColor,
+                        borderWidth: 1
+                    }));
+
+                    data.forEach(item => {
+                        const clusterIndex = clusterColors.findIndex(c => c.label === item.cluster);
+                        datasets[clusterIndex].data.push({
+                            x: item.total_jumlah_tunggakan,
                             y: item.total_nominal_tunggakan,
-                            z: item.kelurahan,
-                            backgroundColor: item.backgroundColor,
-                            borderColor: item.borderColor
+                            z: item.kelurahan
                         });
                     });
 
@@ -579,21 +607,14 @@
                     const clusterChart = new Chart(ctx, {
                         type: 'scatter',
                         data: {
-                            datasets: clusterLabels.map((label, index) => ({
-                                label: label,
-                                data: clusters[index],
-                                backgroundColor: clusters[index].map(d => d
-                                    .backgroundColor),
-                                borderColor: clusters[index].map(d => d.borderColor),
-                                borderWidth: 1
-                            }))
+                            datasets: datasets
                         },
                         options: {
                             scales: {
                                 x: {
                                     title: {
                                         display: true,
-                                        text: 'Jumlah Tunggakan (NOP)'
+                                        text: 'Jumlah Tunggakan'
                                     },
                                     ticks: {
                                         beginAtZero: true
