@@ -964,8 +964,6 @@
                 },
                 dataType: 'json',
                 success: function(data) {
-                    data.sort((a, b) => a.total_jumlah_nop - b.total_jumlah_nop || a.total_nominal_tunggakan - b
-                        .total_nominal_tunggakan);
                     const clusterLabels = ['Hijau', 'Kuning', 'Orange', 'Merah'];
                     const clusters = [
                         [],
@@ -976,7 +974,7 @@
                     data.forEach((item) => {
                         let clusterIndex = clusterLabels.indexOf(item.cluster);
                         clusters[clusterIndex].push({
-                            x: item.total_jumlah_nop,
+                            x: item.total_jumlah_tunggakan,
                             y: item.total_nominal_tunggakan,
                             z: item.kelurahan,
                             backgroundColor: item.backgroundColor,

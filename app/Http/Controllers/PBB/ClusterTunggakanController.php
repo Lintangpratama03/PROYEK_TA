@@ -341,7 +341,7 @@ class ClusterTunggakanController extends Controller
 
     //     return response()->json($arr);
     // }
-    
+
     public function datatable_tunggakan_cluster_hasil(Request $request)
     {
         $kecamatan = $request->kecamatan;
@@ -373,7 +373,7 @@ class ClusterTunggakanController extends Controller
         $query_total = $query_total->orderBy("a.kecamatan", "DESC")->get();
 
         // Hitung rata-rata jumlah nop dan total nominal tunggakan
-        $avg_nop = $query_total->avg('total_jumlah_nop');
+        $avg_tunggakan = $query_total->avg('total_jumlah_tunggakan');
         $avg_nominal = $query_total->avg('total_nominal_tunggakan');
 
         $view = '( SELECT 
@@ -418,13 +418,13 @@ class ClusterTunggakanController extends Controller
             foreach ($query as $key => $row) {
                 // Proses clustering
                 $cluster = '';
-                if ($row->total_jumlah_nop < $avg_nop && $row->total_nominal_tunggakan < $avg_nominal) {
+                if ($row->total_jumlah_tunggakan < $avg_tunggakan && $row->total_nominal_tunggakan < $avg_nominal) {
                     $cluster = 'Hijau';
-                } elseif ($row->total_jumlah_nop < $avg_nop && $row->total_nominal_tunggakan >= $avg_nominal) {
+                } elseif ($row->total_jumlah_tunggakan < $avg_tunggakan && $row->total_nominal_tunggakan >= $avg_nominal) {
                     $cluster = 'Kuning';
-                } elseif ($row->total_jumlah_nop > $avg_nop && $row->total_nominal_tunggakan <= $avg_nominal) {
+                } elseif ($row->total_jumlah_tunggakan > $avg_tunggakan && $row->total_nominal_tunggakan <= $avg_nominal) {
                     $cluster = 'Orange';
-                } elseif ($row->total_jumlah_nop > $avg_nop && $row->total_nominal_tunggakan >= $avg_nominal) {
+                } elseif ($row->total_jumlah_tunggakan > $avg_tunggakan && $row->total_nominal_tunggakan >= $avg_nominal) {
                     $cluster = 'Merah';
                 }
 
@@ -435,7 +435,7 @@ class ClusterTunggakanController extends Controller
                 $arr[] = [
                     'kecamatan' => $row->kecamatan,
                     'kelurahan' => $row_detail_kelurahan,
-                    'jumlah' => $row->total_jumlah_nop,
+                    'jumlah' => $row->total_jumlah_tunggakan,
                     'jumlah_tunggakan' => $row->total_jumlah_tunggakan,
                     'nominal' => number_format($row->total_nominal_tunggakan),
                     'cluster' => $cluster
@@ -447,7 +447,6 @@ class ClusterTunggakanController extends Controller
             ->rawColumns(['kelurahan'])
             ->make(true);
     }
-
 
     public function data_tunggakan_wilayah_cluster(Request $request)
     {
@@ -478,10 +477,10 @@ class ClusterTunggakanController extends Controller
         ");
 
         $query_total = $query_total->orderBy("a.kecamatan", "DESC")->get();
-        $avg_nop = $query_total->avg('total_jumlah_nop');
+        $avg_tunggakan = $query_total->avg('total_jumlah_tunggakan');
         $avg_nominal = $query_total->avg('total_nominal_tunggakan');
 
-        // dd($avg_nop, $avg_nominal);
+        // dd($avg_tunggakan, $avg_nominal);
         $view = '( SELECT 
         kecamatan,
         kelurahan,
@@ -524,19 +523,19 @@ class ClusterTunggakanController extends Controller
                 $backgroundColor = '';
                 $borderColor = '';
 
-                if ($row->total_jumlah_nop < $avg_nop && $row->total_nominal_tunggakan < $avg_nominal) {
+                if ($row->total_jumlah_tunggakan < $avg_tunggakan && $row->total_nominal_tunggakan < $avg_nominal) {
                     $cluster = 'Hijau';
                     $backgroundColor = 'rgba(0, 255, 0, 0.6)';
                     $borderColor = 'rgba(0, 255, 0, 1)';
-                } elseif ($row->total_jumlah_nop < $avg_nop && $row->total_nominal_tunggakan >= $avg_nominal) {
+                } elseif ($row->total_jumlah_tunggakan < $avg_tunggakan && $row->total_nominal_tunggakan >= $avg_nominal) {
                     $cluster = 'Kuning';
                     $backgroundColor = 'rgba(255, 255, 0, 0.6)';
                     $borderColor = 'rgba(255, 255, 0, 1)';
-                } elseif ($row->total_jumlah_nop > $avg_nop && $row->total_nominal_tunggakan <= $avg_nominal) {
+                } elseif ($row->total_jumlah_tunggakan > $avg_tunggakan && $row->total_nominal_tunggakan <= $avg_nominal) {
                     $cluster = 'Orange';
                     $backgroundColor = 'rgba(255, 165, 0, 0.6)';
                     $borderColor = 'rgba(255, 165, 0, 1)';
-                } elseif ($row->total_jumlah_nop > $avg_nop && $row->total_nominal_tunggakan >= $avg_nominal) {
+                } elseif ($row->total_jumlah_tunggakan > $avg_tunggakan && $row->total_nominal_tunggakan >= $avg_nominal) {
                     $cluster = 'Merah';
                     $backgroundColor = 'rgba(255, 0, 0, 0.6)';
                     $borderColor = 'rgba(255, 0, 0, 1)';
@@ -545,7 +544,7 @@ class ClusterTunggakanController extends Controller
                 $arr[] = [
                     'kecamatan' => $row->kecamatan,
                     'kelurahan' => $row->kelurahan,
-                    'total_jumlah_nop' => $row->total_jumlah_nop,
+                    'total_jumlah_tunggakan' => $row->total_jumlah_tunggakan,
                     'total_nominal_tunggakan' => $row->total_nominal_tunggakan,
                     'cluster' => $cluster,
                     'backgroundColor' => $backgroundColor,
