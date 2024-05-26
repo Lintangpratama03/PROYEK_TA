@@ -224,7 +224,7 @@
                                         <th style="text-align: center;">Jumlah NOP</th>
                                         <th style="text-align: center;">Jumlah Tunggakan</th>
                                         <th style="text-align: center;">Nominal Tunggakan</th>
-                                        {{-- <th style="text-align: center;">Rekomendasi</th> --}}
+                                        <th style="text-align: center;">Rekomendasi</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -247,7 +247,7 @@
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Plugins JS Ends-->
-    {{-- <script>
+    <script>
         function newexportaction(e, dt, button, config) {
             var self = this;
             var oldStart = dt.settings()[0]._iDisplayStart;
@@ -527,13 +527,13 @@
                         render: function(data, type, row) {
                             let rekomendasi = '';
                             switch (row.cluster) {
-                                case 'Hijau':
+                                case '1':
                                     rekomendasi = 'Prioritas penagihan rendah';
                                     break;
-                                case 'Kuning':
+                                case '2':
                                     rekomendasi = 'Prioritas penagihan sedang';
                                     break;
-                                case 'Merah':
+                                case '3':
                                     rekomendasi = 'Prioritas penagihan tinggi';
                                     break;
                             }
@@ -570,17 +570,17 @@
                 dataType: 'json',
                 success: function(data) {
                     const clusterColors = [{
-                            label: 'Hijau',
+                            label: 'Cluster 0',
                             backgroundColor: 'rgba(0, 128, 0, 0.6)',
                             borderColor: 'rgba(0, 128, 0, 1)'
                         },
                         {
-                            label: 'Kuning',
+                            label: 'Cluster 1',
                             backgroundColor: 'rgba(255, 255, 0, 0.6)',
                             borderColor: 'rgba(255, 255, 0, 1)'
                         },
                         {
-                            label: 'Merah',
+                            label: 'Cluster 2',
                             backgroundColor: 'rgba(255, 0, 0, 0.6)',
                             borderColor: 'rgba(255, 0, 0, 1)'
                         }
@@ -595,7 +595,7 @@
                     }));
 
                     data.forEach(item => {
-                        const clusterIndex = clusterColors.findIndex(c => c.label === item.cluster);
+                        const clusterIndex = item.cluster;
                         datasets[clusterIndex].data.push({
                             x: item.total_jumlah_tunggakan,
                             y: item.total_nominal_tunggakan,
@@ -645,8 +645,7 @@
                                                 .NumberFormat('id-ID', {
                                                     style: 'currency',
                                                     currency: 'IDR'
-                                                }).format(context.raw.y) +
-                                                ')';
+                                                }).format(context.raw.y) + ')';
                                             return label;
                                         }
                                     }
@@ -660,8 +659,8 @@
                 }
             });
         }
-    </script> --}}
-    <script>
+    </script>
+    {{-- <script>
         function newexportaction(e, dt, button, config) {
             var self = this;
             var oldStart = dt.settings()[0]._iDisplayStart;
@@ -1046,5 +1045,5 @@
                 }
             });
         }
-    </script>
+    </script> --}}
 @endsection
