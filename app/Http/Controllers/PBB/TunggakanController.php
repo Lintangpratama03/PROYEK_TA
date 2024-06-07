@@ -59,7 +59,7 @@ class TunggakanController extends Controller
             kecamatan,
             kelurahan,
             nama_subjek_pajak,
-            nama_objek_pajak
+            alamat_objek_pajak
         FROM data.detail_tunggakan_nop
         GROUP BY 
             nop,
@@ -73,7 +73,7 @@ class TunggakanController extends Controller
             kecamatan,
             kelurahan,
             nama_subjek_pajak,
-            nama_objek_pajak
+            alamat_objek_pajak
         ORDER BY tahun DESC) AS a';
 
         // Execute the query
@@ -90,7 +90,7 @@ class TunggakanController extends Controller
                     a.kecamatan,
                     a.kelurahan,
                     a.nama_subjek_pajak,
-                    a.nama_objek_pajak
+                    a.alamat_objek_pajak
                 ")
             ->whereIn('a.tahun', $tahun);
         if (!is_null($kecamatan)) {
@@ -122,7 +122,7 @@ class TunggakanController extends Controller
                     "kecamatan" => $d->kecamatan,
                     "kelurahan" => $d->kelurahan,
                     "nama_subjek_pajak" => $d->nama_subjek_pajak,
-                    "nama_objek_pajak" => $d->nama_objek_pajak
+                    "alamat_objek_pajak" => $d->alamat_objek_pajak
                 );
             }
         }
@@ -860,45 +860,10 @@ class TunggakanController extends Controller
     {
         $nop = strtoupper($request->nop);
 
-        // $query_sismiop = "
-        //         SELECT 
-        //         THN_PAJAK_SPPT as tahun_pajak,
-        //         PBB_YG_HARUS_DIBAYAR_SPPT AS nominal,
-        //         nama_subjek_pajak, 
-        //         alamat_subjek_pajak, 
-        //         alamat_objek_pajak,
-        //         NM_KECAMATAN as kecamatan,
-        //         NM_KELURAHAN as kelurahan
-        // FROM
-        // (        SELECT KD_PROPINSI || '.' || KD_DATI2 || '.' || KD_KECAMATAN || '.' || 
-        //                         KD_KELURAHAN || '.' || KD_BLOK || '.' || NO_URUT || '.' || KD_JNS_OP as nop, THN_PAJAK_SPPT, PBB_YG_HARUS_DIBAYAR_SPPT,
-        //                 NM_WP_SPPT as nama_subjek_pajak, JLN_WP_SPPT as alamat_subjek_pajak,
-        //                 KD_KECAMATAN,KD_KELURAHAN
-        //         FROM SPPT
-        //         WHERE STATUS_PEMBAYARAN_SPPT='0' 
-        //         AND THN_PAJAK_SPPT > 2002
-        //         -- FILTER NOP DISINI
-        //         AND KD_PROPINSI || '.' || KD_DATI2 || '.' || KD_KECAMATAN || '.' || 
-        //                         KD_KELURAHAN || '.' || KD_BLOK || '.' || NO_URUT || '.' || KD_JNS_OP = '" . $nop . "'
-        // ) x
-        // left join
-        // (SELECT KD_PROPINSI || '.' || KD_DATI2 || '.' || KD_KECAMATAN || '.' || 
-        //                                                         KD_KELURAHAN || '.' || KD_BLOK || '.' || NO_URUT || '.' || KD_JNS_OP as nop2, JALAN_OP as alamat_objek_pajak
-        //         FROM DAT_OBJEK_PAJAK
-        // ) y
-        // on x.nop = y.nop2
-        // left join REF_KECAMATAN kec on x.KD_KECAMATAN = kec.KD_KECAMATAN
-        // left join REF_KELURAHAN kel on  x.KD_KECAMATAN = kel.KD_KECAMATAN and x.KD_KELURAHAN = kel.KD_KELURAHAN
-        // order by THN_PAJAK_SPPT desc
-        // ";
-
-        // $sismiop = DB::connection("oracle")->select($query_sismiop);
-        // dd($sismiop);
-
         $sismiop = DB::connection("pgsql_pbb")
-            ->table("data.detail_tunggakan_ta")
-            ->leftJoin("data.objek_pajak_ta", "data.detail_tunggakan_ta.nop", "=", "data.objek_pajak_ta.nop")
-            ->where('data.detail_tunggakan_ta.nop', $nop)
+            ->table("data.detail_tunggakan_nop")
+            ->leftJoin("data.objek_pajak_ta", "data.detail_tunggakan_nop.nop", "=", "data.objek_pajak_ta.nop")
+            ->where('data.detail_tunggakan_nop.nop', $nop)
             ->get();
         // dd($sismiop);
         $arr = array();
@@ -910,7 +875,7 @@ class TunggakanController extends Controller
                     "nominal" => number_format($d->nominal_ketetapan),
                     "nama_subjek_pajak" => $d->nama_subjek_pajak,
                     "alamat_subjek_pajak" => $d->alamat_subjek_pajak,
-                    "nama_objek_pajak" => $d->nama_objek_pajak,
+                    "alamat_objek_pajak" => $d->alamat_objek_pajak,
                     "kecamatan" => $d->kecamatan,
                     "kelurahan" => $d->kelurahan
                 );

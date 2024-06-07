@@ -153,6 +153,55 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-xl-8">
+                                <div class="card-body">
+                                    <canvas id="clusterChart1"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-xl-4">
+                                <div class="mt-4">
+                                    <h6>Keterangan:</h6>
+                                    <ul>
+                                        <ul>
+                                            <li><span class="color-box green">Hijau:</span> Cluster dengan prioritas
+                                                penagihan rendah.</li><br>
+                                            <li><span class="color-box yellow">Kuning:</span> Cluster dengan prioritas
+                                                penagihan sedang.</li><br>
+                                            <li><span class="color-box red">Merah:</span> Cluster dengan prioritas penagihan
+                                                tinggi.</li>
+                                        </ul>
+                                        <style>
+                                            .color-box {
+                                                display: inline-block;
+                                                padding: 2px;
+                                                font-weight: bold;
+                                            }
+
+                                            .yellow {
+                                                background-color: #FFFF00;
+                                                color: black;
+                                            }
+
+                                            .green {
+                                                background-color: #00FF00;
+                                                color: black;
+                                            }
+
+                                            .orange {
+                                                background-color: #fd9a29;
+                                                color: black;
+                                            }
+
+                                            .red {
+                                                background-color: #FF0000;
+                                                color: white;
+                                            }
+                                        </style>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -557,7 +606,101 @@
             table_tunggakan_wilayah_cluster();
             table_tunggakan_cluster_hasil();
             loadClusterChart();
+            loadClusterChart1();
         });
+
+        function loadClusterChart1(kecamatan = curKecamatan, kelurahan = curKelurahan) {
+            $.ajax({
+                url: '{{ route('pbb.cluster.data_tunggakan_wilayah_cluster_1') }}',
+                type: 'GET',
+                data: {
+                    "kecamatan": kecamatan,
+                    "kelurahan": kelurahan
+                },
+                dataType: 'json',
+                success: function(data) {
+                    const clusterLabels = ['Hijau', 'Kuning', 'Orange', 'Merah'];
+                    const clusters = [
+                        [],
+                        [],
+                        [],
+                        []
+                    ];
+                    data.forEach((item) => {
+                        let clusterIndex = clusterLabels.indexOf(item.cluster);
+                        clusters[clusterIndex].push({
+                            x: item.total_jumlah_tunggakan,
+                            y: item.total_nominal_tunggakan,
+                            z: item.kelurahan,
+                            backgroundColor: item.backgroundColor,
+                            borderColor: item.borderColor
+                        });
+                    });
+
+                    const ctx = document.getElementById('clusterChart1').getContext('2d');
+                    const clusterChart = new Chart(ctx, {
+                        type: 'scatter',
+                        data: {
+                            datasets: clusterLabels.map((label, index) => ({
+                                label: label,
+                                data: clusters[index],
+                                backgroundColor: clusters[index].map(d => d
+                                    .backgroundColor),
+                                borderColor: clusters[index].map(d => d.borderColor),
+                                borderWidth: 1
+                            }))
+                        },
+                        options: {
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Jumlah Tunggakan (NOP)'
+                                    },
+                                    ticks: {
+                                        beginAtZero: true
+                                    }
+                                },
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Total Nominal Tunggakan'
+                                    },
+                                    ticks: {
+                                        beginAtZero: true
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: true
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.raw.z || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            label += '(' + context.raw.x + ', ' + new Intl
+                                                .NumberFormat('id-ID', {
+                                                    style: 'currency',
+                                                    currency: 'IDR'
+                                                }).format(context.raw.y) +
+                                                ')';
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading chart data:', error);
+                }
+            });
+        }
 
         function loadClusterChart(kecamatan = curKecamatan, kelurahan = curKelurahan) {
             $.ajax({
@@ -597,9 +740,9 @@
                     data.forEach(item => {
                         const clusterIndex = item.cluster;
                         datasets[clusterIndex].data.push({
-                            x: item.total_jumlah_tunggakan,
-                            y: item.total_nominal_tunggakan,
-                            z: item.kelurahan
+                            // x: item.total_jumlah_tunggakan,
+                            // y: item.total_nominal_tunggakan,
+                            // z: item.kelurahan
                         });
                     });
 
@@ -611,45 +754,45 @@
                         },
                         options: {
                             scales: {
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Jumlah Tunggakan'
-                                    },
-                                    ticks: {
-                                        beginAtZero: true
-                                    }
-                                },
-                                y: {
-                                    title: {
-                                        display: true,
-                                        text: 'Total Nominal Tunggakan'
-                                    },
-                                    ticks: {
-                                        beginAtZero: true
-                                    }
-                                }
+                                // x: {
+                                //     title: {
+                                //         display: true,
+                                //         text: 'Jumlah Tunggakan'
+                                //     },
+                                //     ticks: {
+                                //         beginAtZero: true
+                                //     }
+                                // },
+                                // y: {
+                                //     title: {
+                                //         display: true,
+                                //         text: 'Total Nominal Tunggakan'
+                                //     },
+                                //     ticks: {
+                                //         beginAtZero: true
+                                //     }
+                                // }
                             },
                             plugins: {
                                 legend: {
                                     display: true
                                 },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            let label = context.raw.z || '';
-                                            if (label) {
-                                                label += ': ';
-                                            }
-                                            label += '(' + context.raw.x + ', ' + new Intl
-                                                .NumberFormat('id-ID', {
-                                                    style: 'currency',
-                                                    currency: 'IDR'
-                                                }).format(context.raw.y) + ')';
-                                            return label;
-                                        }
-                                    }
-                                }
+                                // tooltip: {
+                                //     callbacks: {
+                                //         label: function(context) {
+                                //             let label = context.raw.z || '';
+                                //             if (label) {
+                                //                 label += ': ';
+                                //             }
+                                //             label += '(' + context.raw.x + ', ' + new Intl
+                                //                 .NumberFormat('id-ID', {
+                                //                     style: 'currency',
+                                //                     currency: 'IDR'
+                                //                 }).format(context.raw.y) + ')';
+                                //             return label;
+                                //         }
+                                //     }
+                                // }
                             }
                         }
                     });

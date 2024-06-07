@@ -32,11 +32,10 @@
                             <table class="table table-detail-tunggakan-nop">
                                 <thead>
                                     <tr>
-                                        <th>NPWPD</th>
+                                        <th>NPWP</th>
                                         <th>Nama</th>
                                         <th>Alamat Subjek</th>
-                                        <th>Nama Objek</th>
-                                        <th>Jenis Pajak</th>
+                                        <th>Alamat Objek</th>
                                         <th>Kecamatan</th>
                                         <th>Kelurahan</th>
                                         <th>Telp</th>
@@ -150,12 +149,8 @@
                         name: 'alamat_subjek_pajak'
                     },
                     {
-                        data: 'nama_objek_pajak',
-                        name: 'nama_objek_pajak'
-                    },
-                    {
-                        data: 'nama_rekening',
-                        name: 'nama_rekening'
+                        data: 'alamat_objek_pajak',
+                        name: 'alamat_objek_pajak'
                     },
                     {
                         data: 'kecamatan',

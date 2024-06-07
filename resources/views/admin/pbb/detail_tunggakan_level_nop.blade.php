@@ -39,7 +39,7 @@
                                             <th>Nominal Tunggakan</th>
                                             <th>Nama Subjek Pajak</th>
                                             <th>Alamat Subjek Pajak</th>
-                                            <th>Nama Objek Pajak</th>
+                                            <th>Alamat Objek Pajak</th>
                                             <th>Kecamatan</th>
                                             <th>Kelurahan</th>
                                         </tr>
@@ -156,8 +156,8 @@
                         name: 'alamat_subjek_pajak'
                     },
                     {
-                        data: 'nama_objek_pajak',
-                        name: 'nama_objek_pajak'
+                        data: 'alamat_objek_pajak',
+                        name: 'alamat_objek_pajak'
                     },
                     {
                         data: 'kecamatan',

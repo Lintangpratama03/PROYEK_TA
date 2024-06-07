@@ -70,8 +70,6 @@
                                 <thead>
                                     <tr>
                                         <th rowspan="2" style="text-align: center; vertical-align: middle;">NOP</th>
-                                        <th rowspan="2" style="text-align: center; vertical-align: middle;">Jenis Pajak
-                                        </th>
                                         <th colspan="4" style="text-align: center;background-color:#f3e8ae">
                                             IDENTITAS</th>
                                         <th colspan="3" style="text-align: center;background-color:#cecece">
@@ -80,7 +78,7 @@
                                     </tr>
                                     <tr>
                                         <th>Nama</th>
-                                        <th>Nama Objek Pajak</th>
+                                        <th>Alamat Pajak</th>
                                         <th>Tahun</th>
                                         <th>Bulan</th>
                                         <th>Nominal Ketetapan</th>
@@ -355,16 +353,12 @@
                         name: 'nop'
                     },
                     {
-                        data: 'nama_rekening',
-                        name: 'nama_rekening'
-                    },
-                    {
                         data: 'nama_subjek_pajak',
                         name: 'nama_subjek_pajak'
                     },
                     {
-                        data: 'nama_objek_pajak',
-                        name: 'nama_objek_pajak'
+                        data: 'alamat_objek_pajak',
+                        name: 'alamat_objek_pajak'
                     },
                     {
                         data: 'tahun',
