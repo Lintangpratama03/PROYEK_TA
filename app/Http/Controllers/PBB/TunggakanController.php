@@ -134,95 +134,41 @@ class TunggakanController extends Controller
     public function datatable_tunggakan_level(Request $request)
     {
         // dd($request->all());
-        $wilayah = $request->wilayah;
-        if (!is_null($wilayah)) {
-            if ($wilayah == 'Kelurahan') {
-                $query = DB::connection("pgsql_pbb")->table("data.v_tunggakan_level_daerah")
-                    ->selectRaw("CONCAT(kecamatan, ' - ', kelurahan) as wilayah,
-                    sum(nominal_ringan) AS nominal_ringan,
-                    sum(nominal_sedang) AS nominal_sedang,
-                    sum(nominal_berat) AS nominal_berat,
-                    sum(nop_ringan) AS nop_ringan,
-                    sum(nop_sedang) AS nop_sedang,
-                    sum(nop_berat) AS nop_berat
-                ")
-                    ->whereIn('kecamatan', $this->get_kec())
-                    ->groupBy('kecamatan')
-                    ->groupBy('kelurahan')
-                    ->orderBy('kecamatan', 'ASC')
-                    ->orderBy('kelurahan', 'ASC')
-                    ->get();
-            } elseif ($wilayah == 'Kecamatan') {
-                $query = DB::connection("pgsql_pbb")->table("data.v_tunggakan_level_daerah")
-                    ->selectRaw("kecamatan as wilayah,
-                    sum(nominal_ringan) AS nominal_ringan,
-                    sum(nominal_sedang) AS nominal_sedang,
-                    sum(nominal_berat) AS nominal_berat,
-                    sum(nop_ringan) AS nop_ringan,
-                    sum(nop_sedang) AS nop_sedang,
-                    sum(nop_berat) AS nop_berat
-                ")
-                    ->whereIn('kecamatan', $this->get_kec())
-                    ->groupBy('kecamatan')
-                    ->orderBy('kecamatan', 'ASC')
-                    ->get();
-            } else {
-                $query = DB::connection("pgsql_pbb")->table("data.v_tunggakan_level_daerah")
-                    ->selectRaw(" 'Kota Senyum' as wilayah,
-                    sum(nominal_ringan) AS nominal_ringan,
-                    sum(nominal_sedang) AS nominal_sedang,
-                    sum(nominal_berat) AS nominal_berat,
-                    sum(nop_ringan) AS nop_ringan,
-                    sum(nop_sedang) AS nop_sedang,
-                    sum(nop_berat) AS nop_berat
-                ")
-                    ->whereIn('kecamatan', $this->get_kec())
-                    ->get();
-            }
-        } else {
-            $query = DB::connection("pgsql_pbb")->table("data.v_tunggakan_level_daerah")
-                ->selectRaw(" 'Kota Senyum' as wilayah,
-                sum(nominal_ringan) AS nominal_ringan,
-                sum(nominal_sedang) AS nominal_sedang,
-                sum(nominal_berat) AS nominal_berat,
-                sum(nop_ringan) AS nop_ringan,
-                sum(nop_sedang) AS nop_sedang,
-                sum(nop_berat) AS nop_berat
-            ")
-                ->whereIn('kecamatan', $this->get_kec())
-                ->get();
-        }
+        $level = $request->level;
+
+        $query = DB::connection("pgsql_pbb")->table("data.v_tunggakan_level_nop")
+            ->leftJoin("data.objek_pajak_ta", "data.v_tunggakan_level_nop.nop", "=", "data.objek_pajak_ta.nop")
+            ->selectRaw("v_tunggakan_level_nop.nop, 
+                        v_tunggakan_level_nop.jumlah_tunggakan, 
+                        v_tunggakan_level_nop.nominal_tunggakan, 
+                        v_tunggakan_level_nop.level,
+                        objek_pajak_ta.nama_subjek_pajak")
+            ->when($level, function ($query, $level) {
+                return $query->where('level', $level);
+            })
+            ->get();
+
+        // dd($query);
         $arr = array();
         if ($query->count() > 0) {
             foreach ($query as $key => $d) {
                 // dd($wilayah);
-                $route = url('pbb/tunggakan/detail_tunggakan_level') . "/" . $wilayah . "/" . $d->wilayah;
-                $detail = "<a target='_BLANK' href='" . $route . "' ><u>" . $d->wilayah . "</u> <i class='fa fa-arrow-circle-o-right'></i></a>";
-
-                $route_ringan = url('pbb/tunggakan/detail_tunggakan_level') . "/RINGAN/" . $wilayah . "/" . $d->wilayah;
-                $detail_ringan = "<a target='_BLANK' href='" . $route_ringan . "' ><u>" . number_format($d->nop_ringan) . "</u> <i class='fa fa-arrow-circle-o-right'></i></a>";
-
-                $route_sedang = url('pbb/tunggakan/detail_tunggakan_level') . "/SEDANG/" . $wilayah . "/" . $d->wilayah;
-                $detail_sedang = "<a target='_BLANK' href='" . $route_sedang . "' ><u>" . number_format($d->nop_sedang) . "</u> <i class='fa fa-arrow-circle-o-right'></i></a>";
-
-                $route_berat = url('pbb/tunggakan/detail_tunggakan_level') . "/BERAT/" . $wilayah . "/" . $d->wilayah;
-                $detail_berat = "<a target='_BLANK' href='" . $route_berat . "' ><u>" . number_format($d->nop_berat) . "</u> <i class='fa fa-arrow-circle-o-right'></i></a>";
+                $route = url('pbb/tunggakan/detail_tunggakan_level_nop') . "/" . $d->nop;
+                $detail = "<a target='_BLANK' href='" . $route . "' ><u>" . $d->nop . "</u> <i class='fa fa-arrow-circle-o-right'></i></a>";
 
                 $arr[] =
                     array(
-                        "wilayah" => $d->wilayah,
-                        "nominal_ringan" => number_format($d->nominal_ringan),
-                        "nominal_sedang" => number_format($d->nominal_sedang),
-                        "nominal_berat" => number_format($d->nominal_berat),
-                        "nop_ringan" => $detail_ringan,
-                        "nop_sedang" => $detail_sedang,
-                        "nop_berat" => $detail_berat
+                        "nop" => $detail,
+                        "jumlah_tunggakan" => number_format($d->jumlah_tunggakan),
+                        "nominal_tunggakan" => number_format($d->nominal_tunggakan),
+                        "level" => $d->level,
+                        "nama_subjek_pajak" => $d->nama_subjek_pajak,
                     );
             }
         }
 
         return Datatables::of($arr)
-            ->rawColumns(['wilayah', 'nop_ringan', 'nop_sedang', 'nop_berat'])
+            ->rawColumns(['nop'])
             ->make(true);
     }
 

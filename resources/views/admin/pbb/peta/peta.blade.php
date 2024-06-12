@@ -66,7 +66,7 @@
             </div>
             <div id="map-legend">
                 <ul>
-                    <ul>
+                    {{-- <ul>
                         <li><span class="color-box green">Hijau:</span> Daerah dengan jumlah
                             tunggakan
                             nop dibawah rata-rata dan nominal tunggakan dibawah rata-rata.</li><br>
@@ -79,32 +79,12 @@
                         <li><span class="color-box red">Merah:</span> Daerah dengan jumlah
                             tunggakan(nop)
                             diatas rata-rata dan nominal diatas rata-rata.</li>
-                    </ul>
+                    </ul> --}}
                     <style>
                         .color-box {
                             display: inline-block;
                             padding: 2px;
                             font-weight: bold;
-                        }
-
-                        .yellow {
-                            background-color: #FFFF00;
-                            color: black;
-                        }
-
-                        .green {
-                            background-color: #00FF00;
-                            color: black;
-                        }
-
-                        .orange {
-                            background-color: #fd9a29;
-                            color: black;
-                        }
-
-                        .red {
-                            background-color: #FF0000;
-                            color: white;
                         }
                     </style>
                     <div id="legend-items"></div>

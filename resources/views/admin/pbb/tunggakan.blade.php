@@ -107,15 +107,15 @@
                                     <div class="mb-3 draggable">
                                         <div class="input-group">
                                             <div class="col-xl-7">
-                                                <select name="wilayah-v" id="wilayah-v"class="form-control btn-square"
+                                                <select name="level-filter" id="level-filter"class="form-control btn-square"
                                                     style="border: 1px solid #808080;">
                                                     <option value="" class = "d-flex align-items-center">Pilih
-                                                        Kategori Wilayah</option>
-                                                    <option value="Kabupaten" class = "d-flex align-items-center">Kabupaten
+                                                        Kategori Level</option>
+                                                    <option value="Berat" class = "d-flex align-items-center">Berat
                                                     </option>
-                                                    <option value="Kecamatan" class = "d-flex align-items-center">Kecamatan
+                                                    <option value="Sedang" class = "d-flex align-items-center">Sedang
                                                     </option>
-                                                    <option value="Kelurahan" class = "d-flex align-items-center">Kelurahan
+                                                    <option value="Ringan" class = "d-flex align-items-center">Ringan
                                                     </option>
                                                 </select>
                                             </div>
@@ -133,19 +133,11 @@
                                 <table class="table table-sm table-tunggakan-level">
                                     <thead>
                                         <tr>
-                                            <th rowspan="2" style="text-align: center; vertical-align: middle;">Wilayah
-                                            </th>
-                                            <th colspan="2">Ringan (1) </th>
-                                            <th colspan="2">Sedang (2-4)</th>
-                                            <th colspan="2">Berat (>4)</th>
-                                        </tr>
-                                        <tr>
-                                            <th>Nominal</th>
                                             <th>NOP</th>
-                                            <th>Nominal</th>
-                                            <th>NOP</th>
-                                            <th>Nominal</th>
-                                            <th>NOP</th>
+                                            <th>Nama</th>
+                                            <th>jumlah Tungakan</th>
+                                            <th>Nominal Tunggakan</th>
+                                            <th>Level</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -312,11 +304,11 @@
         }
 
         function filterWilayahV() {
-            var wilayah = $('#wilayah-v').val();
-            // console.log(wilayah);
-            if (wilayah !== null) {
+            var level = $('#level-filter').val();
+            // console.log(level);
+            if (level !== null) {
                 $(".table-tunggakan-level").DataTable().destroy();
-                table_tunggakan_level(wilayah);
+                table_tunggakan_level(level);
             }
         }
 
@@ -387,7 +379,7 @@
             });
         }
 
-        function table_tunggakan_level(wilayah = 'Kabupaten') {
+        function table_tunggakan_level(level = null) {
             var table = $(".table-tunggakan-level").DataTable({
                 dom: "<'row'<'col-sm-12 col-md-3'l><'col-sm-12 col-md-6 text-center'B><'col-sm-12 col-md-3'>>" +
                     // dengan Button
@@ -408,37 +400,29 @@
                     url: '{{ route('pbb.tunggakan.datatable_tunggakan_level') }}',
                     type: 'GET',
                     data: {
-                        "wilayah": wilayah,
+                        "level": level,
                     }
                 },
                 columns: [{
-                        data: 'wilayah',
-                        name: 'wilayah'
+                        data: 'nop',
+                        name: 'nop'
                     },
                     {
-                        data: 'nominal_ringan',
-                        name: 'nominal_ringan'
+                        data: 'nama_subjek_pajak',
+                        name: 'nama_subjek_pajak'
                     },
                     {
-                        data: 'nop_ringan',
-                        name: 'nop_ringan'
+                        data: 'jumlah_tunggakan',
+                        name: 'jumlah_tunggakan'
                     },
                     {
-                        data: 'nominal_sedang',
-                        name: 'nominal_sedang'
+                        data: 'nominal_tunggakan',
+                        name: 'nominal_tunggakan'
                     },
                     {
-                        data: 'nop_sedang',
-                        name: 'nop_sedang'
+                        data: 'level',
+                        name: 'level'
                     },
-                    {
-                        data: 'nominal_berat',
-                        name: 'nominal_berat'
-                    },
-                    {
-                        data: 'nop_berat',
-                        name: 'nop_berat'
-                    }
                 ],
                 order: [
                     [0, 'asc'],

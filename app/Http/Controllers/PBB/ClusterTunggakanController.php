@@ -264,83 +264,87 @@ class ClusterTunggakanController extends Controller
     //         ->make(true);
     // }
 
-    // public function data_tunggakan_wilayah_cluster(Request $request)
-    // {
-    //     $kecamatan = $request->kecamatan;
-    //     $kelurahan = $request->kelurahan;
+    public function data_tunggakan_wilayah_cluster_nop(Request $request)
+    {
+        $kecamatan = $request->kecamatan;
+        $kelurahan = $request->kelurahan;
 
-    //     // Mendapatkan data dari view
-    //     $view = '( SELECT 
-    //         kecamatan,
-    //         kelurahan,
-    //         total_nominal_tunggakan,
-    //         total_jumlah_tunggakan,
-    //         total_jumlah_nop
-    //         FROM data.v_tunggakan_level_daerah
-    //         GROUP BY 
-    //             kecamatan,
-    //             kelurahan,
-    //             total_nominal_tunggakan,
-    //             total_jumlah_tunggakan,
-    //             total_jumlah_nop) AS a';
+        // Mendapatkan data dari view
+        $view = '( SELECT 
+            kecamatan,
+            kelurahan,
+            nop_berat,
+            nop_sedang,
+            nop_ringan,
+            total_nominal_tunggakan,
+            total_jumlah_tunggakan,
+            total_jumlah_nop
+            FROM data.v_tunggakan_level_daerah
+            GROUP BY 
+                kecamatan,
+                kelurahan,
+                nop_berat,
+                nop_sedang,
+                nop_ringan,
+                total_nominal_tunggakan,
+                total_jumlah_tunggakan,
+                total_jumlah_nop) AS a';
 
-    //     $query = DB::connection("pgsql_pbb")->table(DB::connection("pgsql_pbb")->raw($view))
-    //         ->selectRaw("
-    //             a.kecamatan,
-    //             a.kelurahan,
-    //             a.total_nominal_tunggakan,
-    //             a.total_jumlah_tunggakan,
-    //             a.total_jumlah_nop
-    //         ");
+        $query = DB::connection("pgsql_pbb")->table(DB::connection("pgsql_pbb")->raw($view))
+            ->selectRaw("
+                a.kecamatan,
+                a.kelurahan,
+                a.nop_berat,
+                a.nop_sedang,
+                a.nop_ringan,
+                a.total_nominal_tunggakan,
+                a.total_jumlah_tunggakan,
+                a.total_jumlah_nop
+            ");
 
-    //     if (!is_null($kecamatan)) {
-    //         $query->where('a.kecamatan', $kecamatan);
-    //     }
+        if (!is_null($kecamatan)) {
+            $query->where('a.kecamatan', $kecamatan);
+        }
 
-    //     if (!is_null($kelurahan)) {
-    //         $query->where('a.kelurahan', $kelurahan);
-    //     }
+        if (!is_null($kelurahan)) {
+            $query->where('a.kelurahan', $kelurahan);
+        }
 
-    //     $query = $query->orderBy("a.kecamatan", "DESC")->get();
+        $query = $query->orderBy("a.kelurahan", "DESC")->get();
+        // dd($query);
+        // Memformat data untuk K-Means
+        $data = $query->map(function ($row) {
+            return [
+                $row->total_jumlah_tunggakan,
+                $row->total_jumlah_nop,
+            ];
+        })->toArray();
 
-    //     // Memformat data untuk K-Means
-    //     $data = $query->map(function ($row) {
-    //         return [
-    //             $row->total_jumlah_tunggakan,
-    //             $row->total_nominal_tunggakan,
-    //         ];
-    //     })->toArray();
+        $kmeans = new KMeans(3, KMeans::INIT_KMEANS_PLUS_PLUS);
+        $clusters = $kmeans->cluster($data);
+        // dd($clusters);
+        $arr = [];
 
-    //     // Terapkan K-Means
-    //     $kmeans = new KMeans(3); // Menentukan 3 kluster
-    //     $clusters = $kmeans->cluster($data);
+        foreach ($clusters as $i => $cluster) {
+            foreach ($cluster as $point) {
+                $index = array_search($point, $data);
+                $row = $query[$index];
 
-    //     $arr = [];
-    //     $colorMap = [
-    //         0 => ['cluster' => 'Hijau', 'backgroundColor' => 'rgba(0, 128, 0, 0.6)', 'borderColor' => 'rgba(0, 128, 0, 1)'],
-    //         1 => ['cluster' => 'Kuning', 'backgroundColor' => 'rgba(255, 255, 0, 0.6)', 'borderColor' => 'rgba(255, 255, 0, 1)'],
-    //         2 => ['cluster' => 'Merah', 'backgroundColor' => 'rgba(255, 0, 0, 0.6)', 'borderColor' => 'rgba(255, 0, 0, 1)'],
-    //     ];
+                $arr[] = [
+                    'kecamatan' => $row->kecamatan,
+                    'kelurahan' => $row->kelurahan,
+                    'nop_ringan' => $row->nop_ringan,
+                    'nop_sedang' => $row->nop_sedang,
+                    'nop_berat' => $row->nop_berat,
+                    'total_jumlah_tunggakan' => $row->total_jumlah_tunggakan,
+                    'total_jumlah_nop' => $row->total_jumlah_nop,
+                    'cluster' => $i
+                ];
+            }
+        }
 
-    //     foreach ($clusters as $i => $cluster) {
-    //         foreach ($cluster as $point) {
-    //             $index = array_search($point, $data);
-    //             $row = $query[$index];
-
-    //             $arr[] = [
-    //                 'kecamatan' => $row->kecamatan,
-    //                 'kelurahan' => $row->kelurahan,
-    //                 'total_jumlah_tunggakan' => $row->total_jumlah_tunggakan,
-    //                 'total_nominal_tunggakan' => $row->total_nominal_tunggakan,
-    //                 'cluster' => $colorMap[$i]['cluster'],
-    //                 'backgroundColor' => $colorMap[$i]['backgroundColor'],
-    //                 'borderColor' => $colorMap[$i]['borderColor']
-    //             ];
-    //         }
-    //     }
-
-    //     return response()->json($arr);
-    // }
+        return response()->json($arr);
+    }
 
     public function datatable_tunggakan_cluster_hasil_1(Request $request)
     {
@@ -447,113 +451,113 @@ class ClusterTunggakanController extends Controller
             ->rawColumns(['kelurahan'])
             ->make(true);
     }
-    public function data_tunggakan_wilayah_cluster_1(Request $request)
-    {
-        $kecamatan = $request->kecamatan;
-        $kelurahan = $request->kelurahan;
+    // public function data_tunggakan_wilayah_cluster_1(Request $request)
+    // {
+    //     $kecamatan = $request->kecamatan;
+    //     $kelurahan = $request->kelurahan;
 
-        $view_total = '( SELECT 
-        kecamatan,
-        kelurahan,
-        total_nominal_tunggakan,
-        total_jumlah_tunggakan,
-        total_jumlah_nop
-        FROM data.v_tunggakan_level_daerah
-        GROUP BY 
-            kecamatan,
-            kelurahan,
-            total_nominal_tunggakan,
-            total_jumlah_tunggakan,
-            total_jumlah_nop) AS a';
+    //     $view_total = '( SELECT 
+    //     kecamatan,
+    //     kelurahan,
+    //     total_nominal_tunggakan,
+    //     total_jumlah_tunggakan,
+    //     total_jumlah_nop
+    //     FROM data.v_tunggakan_level_daerah
+    //     GROUP BY 
+    //         kecamatan,
+    //         kelurahan,
+    //         total_nominal_tunggakan,
+    //         total_jumlah_tunggakan,
+    //         total_jumlah_nop) AS a';
 
-        $query_total = DB::connection("pgsql_pbb")->table(DB::connection("pgsql_pbb")->raw($view_total))
-            ->selectRaw("
-            a.kecamatan,
-            a.kelurahan,
-            a.total_nominal_tunggakan,
-            a.total_jumlah_tunggakan,
-            a.total_jumlah_nop
-        ");
+    //     $query_total = DB::connection("pgsql_pbb")->table(DB::connection("pgsql_pbb")->raw($view_total))
+    //         ->selectRaw("
+    //         a.kecamatan,
+    //         a.kelurahan,
+    //         a.total_nominal_tunggakan,
+    //         a.total_jumlah_tunggakan,
+    //         a.total_jumlah_nop
+    //     ");
 
-        $query_total = $query_total->orderBy("a.kecamatan", "DESC")->get();
-        $avg_tunggakan = $query_total->avg('total_jumlah_tunggakan');
-        $avg_nominal = $query_total->avg('total_nominal_tunggakan');
+    //     $query_total = $query_total->orderBy("a.kecamatan", "DESC")->get();
+    //     $avg_tunggakan = $query_total->avg('total_jumlah_tunggakan');
+    //     $avg_nominal = $query_total->avg('total_nominal_tunggakan');
 
-        // dd($avg_tunggakan, $avg_nominal);
-        $view = '( SELECT 
-        kecamatan,
-        kelurahan,
-        total_nominal_tunggakan,
-        total_jumlah_tunggakan,
-        total_jumlah_nop
-        FROM data.v_tunggakan_level_daerah
-        GROUP BY 
-            kecamatan,
-            kelurahan,
-            total_nominal_tunggakan,
-            total_jumlah_tunggakan,
-            total_jumlah_nop
-        ORDER BY kecamatan DESC) AS a';
+    //     // dd($avg_tunggakan, $avg_nominal);
+    //     $view = '( SELECT 
+    //     kecamatan,
+    //     kelurahan,
+    //     total_nominal_tunggakan,
+    //     total_jumlah_tunggakan,
+    //     total_jumlah_nop
+    //     FROM data.v_tunggakan_level_daerah
+    //     GROUP BY 
+    //         kecamatan,
+    //         kelurahan,
+    //         total_nominal_tunggakan,
+    //         total_jumlah_tunggakan,
+    //         total_jumlah_nop
+    //     ORDER BY kecamatan DESC) AS a';
 
-        $query = DB::connection("pgsql_pbb")->table(DB::connection("pgsql_pbb")->raw($view))
-            ->selectRaw("
-            a.kecamatan,
-            a.kelurahan,
-            a.total_nominal_tunggakan,
-            a.total_jumlah_tunggakan,
-            a.total_jumlah_nop
-        ");
+    //     $query = DB::connection("pgsql_pbb")->table(DB::connection("pgsql_pbb")->raw($view))
+    //         ->selectRaw("
+    //         a.kecamatan,
+    //         a.kelurahan,
+    //         a.total_nominal_tunggakan,
+    //         a.total_jumlah_tunggakan,
+    //         a.total_jumlah_nop
+    //     ");
 
-        if (!is_null($kecamatan)) {
-            $query->where('a.kecamatan', $kecamatan);
-        }
+    //     if (!is_null($kecamatan)) {
+    //         $query->where('a.kecamatan', $kecamatan);
+    //     }
 
-        if (!is_null($kelurahan)) {
-            $query->where('a.kelurahan', $kelurahan);
-        }
+    //     if (!is_null($kelurahan)) {
+    //         $query->where('a.kelurahan', $kelurahan);
+    //     }
 
-        $query = $query->orderBy("a.kecamatan", "DESC")->get();
+    //     $query = $query->orderBy("a.kecamatan", "DESC")->get();
 
-        $arr = [];
-        if ($query->count() > 0) {
-            // Calculate average values
-            foreach ($query as $row) {
-                $cluster = '';
-                $backgroundColor = '';
-                $borderColor = '';
+    //     $arr = [];
+    //     if ($query->count() > 0) {
+    //         // Calculate average values
+    //         foreach ($query as $row) {
+    //             $cluster = '';
+    //             $backgroundColor = '';
+    //             $borderColor = '';
 
-                if ($row->total_jumlah_tunggakan < $avg_tunggakan && $row->total_nominal_tunggakan < $avg_nominal) {
-                    $cluster = 'Hijau';
-                    $backgroundColor = 'rgba(0, 255, 0, 0.6)';
-                    $borderColor = 'rgba(0, 255, 0, 1)';
-                } elseif ($row->total_jumlah_tunggakan < $avg_tunggakan && $row->total_nominal_tunggakan >= $avg_nominal) {
-                    $cluster = 'Kuning';
-                    $backgroundColor = 'rgba(255, 255, 0, 0.6)';
-                    $borderColor = 'rgba(255, 255, 0, 1)';
-                } elseif ($row->total_jumlah_tunggakan > $avg_tunggakan && $row->total_nominal_tunggakan <= $avg_nominal) {
-                    $cluster = 'Orange';
-                    $backgroundColor = 'rgba(255, 165, 0, 0.6)';
-                    $borderColor = 'rgba(255, 165, 0, 1)';
-                } elseif ($row->total_jumlah_tunggakan > $avg_tunggakan && $row->total_nominal_tunggakan >= $avg_nominal) {
-                    $cluster = 'Merah';
-                    $backgroundColor = 'rgba(255, 0, 0, 0.6)';
-                    $borderColor = 'rgba(255, 0, 0, 1)';
-                }
+    //             if ($row->total_jumlah_tunggakan < $avg_tunggakan && $row->total_nominal_tunggakan < $avg_nominal) {
+    //                 $cluster = 'Hijau';
+    //                 $backgroundColor = 'rgba(0, 255, 0, 0.6)';
+    //                 $borderColor = 'rgba(0, 255, 0, 1)';
+    //             } elseif ($row->total_jumlah_tunggakan < $avg_tunggakan && $row->total_nominal_tunggakan >= $avg_nominal) {
+    //                 $cluster = 'Kuning';
+    //                 $backgroundColor = 'rgba(255, 255, 0, 0.6)';
+    //                 $borderColor = 'rgba(255, 255, 0, 1)';
+    //             } elseif ($row->total_jumlah_tunggakan > $avg_tunggakan && $row->total_nominal_tunggakan <= $avg_nominal) {
+    //                 $cluster = 'Orange';
+    //                 $backgroundColor = 'rgba(255, 165, 0, 0.6)';
+    //                 $borderColor = 'rgba(255, 165, 0, 1)';
+    //             } elseif ($row->total_jumlah_tunggakan > $avg_tunggakan && $row->total_nominal_tunggakan >= $avg_nominal) {
+    //                 $cluster = 'Merah';
+    //                 $backgroundColor = 'rgba(255, 0, 0, 0.6)';
+    //                 $borderColor = 'rgba(255, 0, 0, 1)';
+    //             }
 
-                $arr[] = [
-                    'kecamatan' => $row->kecamatan,
-                    'kelurahan' => $row->kelurahan,
-                    'total_jumlah_tunggakan' => $row->total_jumlah_tunggakan,
-                    'total_nominal_tunggakan' => $row->total_nominal_tunggakan,
-                    'cluster' => $cluster,
-                    'backgroundColor' => $backgroundColor,
-                    'borderColor' => $borderColor
-                ];
-            }
-        }
+    //             $arr[] = [
+    //                 'kecamatan' => $row->kecamatan,
+    //                 'kelurahan' => $row->kelurahan,
+    //                 'total_jumlah_tunggakan' => $row->total_jumlah_tunggakan,
+    //                 'total_nominal_tunggakan' => $row->total_nominal_tunggakan,
+    //                 'cluster' => $cluster,
+    //                 'backgroundColor' => $backgroundColor,
+    //                 'borderColor' => $borderColor
+    //             ];
+    //         }
+    //     }
 
-        return response()->json($arr);
-    }
+    //     return response()->json($arr);
+    // }
     public function datatable_tunggakan_cluster_hasil(Request $request)
     {
         $kecamatan = $request->kecamatan;
@@ -563,24 +567,24 @@ class ClusterTunggakanController extends Controller
         $view = '( SELECT 
             kecamatan,
             kelurahan,
-            total_nominal_tunggakan,
-            total_jumlah_tunggakan,
-            total_jumlah_nop
+            nop_berat,
+            nop_sedang,
+            nop_ringan
             FROM data.v_tunggakan_level_daerah
             GROUP BY 
                 kecamatan,
                 kelurahan,
-                total_nominal_tunggakan,
-                total_jumlah_tunggakan,
-                total_jumlah_nop) AS a';
+                nop_berat,
+                nop_sedang,
+                nop_ringan) AS a';
 
         $query = DB::connection("pgsql_pbb")->table(DB::connection("pgsql_pbb")->raw($view))
             ->selectRaw("
                 a.kecamatan,
                 a.kelurahan,
-                a.total_nominal_tunggakan,
-                a.total_jumlah_tunggakan,
-                a.total_jumlah_nop
+                a.nop_berat,
+                a.nop_sedang,
+                a.nop_ringan
             ");
 
         if (!is_null($kecamatan)) {
@@ -596,17 +600,16 @@ class ClusterTunggakanController extends Controller
         // Memformat data untuk K-Means
         $data = $query->map(function ($row) {
             return [
-                $row->total_jumlah_tunggakan,
-                $row->total_nominal_tunggakan,
+                $row->nop_berat,
+                $row->nop_sedang,
+                $row->nop_ringan,
             ];
         })->toArray();
-        // dd($data);
+
         // Terapkan K-Means
         $kmeans = new KMeans(3, KMeans::INIT_KMEANS_PLUS_PLUS);
         $clusters = $kmeans->cluster($data);
         // dd($clusters);
-        $arr = [];
-
         $arr = [];
         foreach ($clusters as $i => $cluster) {
             foreach ($cluster as $point) {
@@ -615,14 +618,14 @@ class ClusterTunggakanController extends Controller
                 $arr[] = [
                     'kecamatan' => $row->kecamatan,
                     'kelurahan' => $row->kelurahan,
-                    'total_jumlah_tunggakan' => $row->total_jumlah_tunggakan,
-                    'total_jumlah_nop' => $row->total_jumlah_nop,
-                    'total_nominal_tunggakan' => $row->total_nominal_tunggakan,
+                    'nop_berat' => $row->nop_berat,
+                    'nop_sedang' => $row->nop_sedang,
+                    'nop_ringan' => $row->nop_ringan,
                     'cluster' => $i,
                 ];
             }
         }
-        // dd($arr);
+
         return Datatables::of($arr)
             ->rawColumns(['kelurahan'])
             ->make(true);
