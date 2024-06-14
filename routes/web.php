@@ -255,7 +255,19 @@ Route::middleware($middleware_auth)->group(function () {
             });
         });
     });
+    Route::group(['prefix' => 'dashboard'], function () {
+        Route::name('dashboard.')->group(function () {
 
+            Route::prefix('tunggakan')->name('tunggakan.')->group(function () {
+                Route::get('/', 'PBB\DashboardController@index')->name('index');
+                Route::get('/get_wilayah', 'PBB\DashboardController@get_wilayah')->name('get_wilayah');
+                Route::get('/tunggakan_perbulan', 'PBB\DashboardController@tunggakan_perbulan')->name('tunggakan_perbulan');
+
+                Route::get('datatable_detail_tunggakan_perbulan', 'PBB\DashboardController@datatable_detail_tunggakan_perbulan')->name('datatable_detail_tunggakan_perbulan');
+                Route::get('detail_tunggakan_perbulan/{pajak}/{tahun}/{bulan}/{kecamatan?}/{kelurahan?}', 'PBB\DashboardController@detail_tunggakan_perbulan')->name('detail_tunggakan_perbulan');
+            });
+        });
+    });
     Route::group(['prefix' => 'bphtb'], function () {
         Route::name('bphtb.')->group(function () {
 

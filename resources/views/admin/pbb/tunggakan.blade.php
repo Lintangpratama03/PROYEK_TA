@@ -69,18 +69,18 @@
                             <table class="table table-tunggakan-nop">
                                 <thead>
                                     <tr>
-                                        <th rowspan="2" style="text-align: center; vertical-align: middle;">NOP</th>
-                                        <th colspan="4" style="text-align: center;background-color:#f3e8ae">
+                                        <th rowspan="2" style="text-align: center; vertical-align: middle;">Tahun</th>
+                                        <th rowspan="2" style="text-align: center; vertical-align: middle;">Bulan</th>
+                                        <th colspan="3" style="text-align: center;background-color:#f3e8ae">
                                             IDENTITAS</th>
                                         <th colspan="3" style="text-align: center;background-color:#cecece">
                                             NOMINAL</th>
 
                                     </tr>
                                     <tr>
+                                        <th>NOP</th>
                                         <th>Nama</th>
                                         <th>Alamat Pajak</th>
-                                        <th>Tahun</th>
-                                        <th>Bulan</th>
                                         <th>Nominal Ketetapan</th>
                                         <th>Denda</th>
                                         <th>Total Tunggakan</th>
@@ -313,7 +313,7 @@
         }
 
 
-        function table_tunggakan_nop(kecamatan = curKecamatan, kelurahan = curKelurahan, tahun = [currentYear]) {
+        function table_tunggakan_nop(kecamatan = curKecamatan, kelurahan = curKelurahan, tahun = []) {
 
             var table = $(".table-tunggakan-nop").DataTable({
                 dom: "<'row'<'col-sm-12 col-md-3'l><'col-sm-12 col-md-6 text-center'B><'col-sm-12 col-md-3'>>" +
@@ -341,6 +341,14 @@
                     }
                 },
                 columns: [{
+                        data: 'tahun',
+                        name: 'tahun'
+                    },
+                    {
+                        data: 'bulan',
+                        name: 'bulan'
+                    },
+                    {
                         data: 'nop',
                         name: 'nop'
                     },
@@ -351,14 +359,6 @@
                     {
                         data: 'alamat_objek_pajak',
                         name: 'alamat_objek_pajak'
-                    },
-                    {
-                        data: 'tahun',
-                        name: 'tahun'
-                    },
-                    {
-                        data: 'bulan',
-                        name: 'bulan'
                     },
                     {
                         data: 'nominal_ketetapan',

@@ -65,7 +65,7 @@
                         class="theme-form login-form needs-validation" novalidate="">
                         @csrf
                         <div class="logo-wrapper text-center"><a href="#"><img class="img-fluid" width="50%"
-                                    src="{{ asset('images') }}/logo1.jpg" alt=""></a></div>
+                                    src="{{ asset('images') }}/logo1.png" alt=""></a></div>
                         <hr>
                         <h5>SMART DASHBOARD KOTA SENYUM</h5>
                         <h6>Silahkan Login</h6>

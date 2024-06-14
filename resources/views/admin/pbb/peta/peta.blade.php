@@ -16,8 +16,9 @@
             </div>
         </div>
     </div>
+
     <div class="col-sm-12">
-        <button id="toggleMap" class="btn btn-map-on">Turn Map Off</button>
+        <button id="toggleMap" class="btn btn-map-off">Turn Map On</button>
     </div>
     <br>
     <div class="row">
@@ -60,34 +61,25 @@
                     border-radius: 5px;
                     z-index: 1000;
                 }
+
+                .color-box {
+                    display: inline-block;
+                    width: 12px;
+                    height: 12px;
+                    margin-right: 5px;
+                }
+
+                .kelurahan-label {
+                    border-radius: 5px;
+                    padding: 2px 5px;
+                    white-space: nowrap;
+                }
             </style>
             <div id="map-title">
                 <h4>Peta Kota Senyum</h4>
             </div>
             <div id="map-legend">
-                <ul>
-                    {{-- <ul>
-                        <li><span class="color-box green">Hijau:</span> Daerah dengan jumlah
-                            tunggakan
-                            nop dibawah rata-rata dan nominal tunggakan dibawah rata-rata.</li><br>
-                        <li><span class="color-box yellow">Kuning:</span> Daerah dengan jumlah
-                            tunggakan(nop)
-                            dibawah rata-rata dan nominal tunggakan diatas rata-rata.</li><br>
-                        <li><span class="color-box orange">Orange:</span> Daerah dengan jumlah
-                            tunggakan(nop)
-                            diatas rata-rata dan nominal dibawah rata-rata.</li><br>
-                        <li><span class="color-box red">Merah:</span> Daerah dengan jumlah
-                            tunggakan(nop)
-                            diatas rata-rata dan nominal diatas rata-rata.</li>
-                    </ul> --}}
-                    <style>
-                        .color-box {
-                            display: inline-block;
-                            padding: 2px;
-                            font-weight: bold;
-                        }
-                    </style>
-                    <div id="legend-items"></div>
+                <ul id="legend-items"></ul>
             </div>
         </div>
         <div class="col-sm-4">
@@ -97,7 +89,44 @@
                 </div>
                 <div class="card-body">
                     <div id="detail-wilayah">
-                        <!-- Konten detail akan ditampilkan di sini -->
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Judul</th>
+                                    <th>Nilai</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Wilayah</td>
+                                    <td>Kota Senyum</td>
+                                </tr>
+                                <tr>
+                                    <td>Total Jumlah Tunggakan</td>
+                                    <td>{{ $totalData['total_jumlah_tunggakan'] }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Total Nominal Tunggakan</td>
+                                    <td>Rp {{ number_format($totalData['total_nominal_tunggakan'], 0, ',', '.') }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Total NOP (Menunggak)</td>
+                                    <td>{{ $totalData['total_jumlah_nop'] }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Level Ringan</td>
+                                    <td>{{ $totalData['nop_ringan'] }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Level Sedang</td>
+                                    <td>{{ $totalData['nop_sedang'] }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Level Berat</td>
+                                    <td>{{ $totalData['nop_berat'] }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -120,7 +149,7 @@
 
         var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+        });
 
         var toggleButton = document.getElementById('toggleMap');
 
@@ -154,6 +183,9 @@
                     total_jumlah_tunggakan: feature.total_jumlah_tunggakan,
                     total_nominal_tunggakan: feature.total_nominal_tunggakan,
                     total_jumlah_nop: feature.total_jumlah_nop,
+                    nop_ringan: feature.nop_ringan,
+                    nop_sedang: feature.nop_sedang,
+                    nop_berat: feature.nop_berat,
                     backgroundColor: feature.backgroundColor,
                     borderColor: feature.borderColor,
                     cluster: feature.cluster
@@ -172,12 +204,27 @@
                 layer.bindPopup(`
             <strong>Kecamatan:</strong> ${feature.properties.kecamatan}<br>
             <strong>Kelurahan:</strong> ${feature.properties.kelurahan}<br>
-            <strong>Total Tunggakan:</strong> ${feature.properties.total_jumlah_tunggakan}<br>
-            <strong>Total Nominal Tunggakan:</strong> Rp ${feature.properties.total_nominal_tunggakan.toLocaleString()}<br>
-            <strong>Total NOP(Menunggak):</strong> ${feature.properties.total_jumlah_nop}
+            <strong>Level Ringan:</strong> ${feature.properties.nop_ringan}<br>
+            <strong>Level Sedang:</strong> ${feature.properties.nop_sedang}<br>
+            <strong>Level Berat:</strong> ${feature.properties.nop_berat}<br>
         `);
             }
         }).addTo(map);
+
+        // Menambahkan label kelurahan di tengah blok geojson
+        geoJsonLayer.eachLayer(function(layer) {
+            var centroid = layer.getBounds().getCenter();
+            if (layer.feature.properties.kelurahan === "Rejo") {
+                centroid.lng += 0.004; // Adjust this value to move the label to the right
+            }
+            L.marker(centroid, {
+                icon: L.divIcon({
+                    className: 'kelurahan-label',
+                    html: `<div>${layer.feature.properties.kelurahan}</div>`,
+                    iconSize: [100, 40]
+                })
+            }).addTo(map);
+        });
 
         // Membuat legenda
         var legend = L.control({
@@ -185,29 +232,152 @@
         });
         legend.onAdd = function(map) {
             var div = L.DomUtil.create('div', 'info legend');
-            var grades = ['Hijau', 'Kuning', 'Orange', 'Merah'];
-            var labels = [];
-
-            grades.forEach(function(grade, index) {
-                var backgroundColor = data[0][grade.toLowerCase() + 'Color'];
-                div.innerHTML += `<i style="background-color: ${backgroundColor}"></i> ${grade}<br>`;
-            });
-
+            var kecamatanSet = new Set();
+            var legendItems = data.map(function(item) {
+                if (!kecamatanSet.has(item.kecamatan)) {
+                    kecamatanSet.add(item.kecamatan);
+                    return `
+                        <li>
+                            <i class="color-box" style="background-color: ${item.backgroundColor};"></i>
+                            Kecamatan ${item.kecamatan}
+                        </li>
+                    `;
+                }
+                return '';
+            }).join('');
+            div.innerHTML = `<ul>${legendItems}</ul>`;
             return div;
         };
         legend.addTo(map);
+
         geoJsonLayer.on('click', function(e) {
             var layer = e.layer;
             var props = layer.feature.properties;
 
             // Tampilkan detail di panel
             $('#detail-wilayah').html(`
-                <strong>Kecamatan:</strong> ${props.kecamatan}<br>
-                <strong>Kelurahan:</strong> ${props.kelurahan}<br>
-                <strong>Total Tunggakan:</strong> ${props.total_jumlah_tunggakan}<br>
-                <strong>Total Nominal Tunggakan:</strong> Rp ${props.total_nominal_tunggakan.toLocaleString()}<br>
-                <strong>Total NOP(Menunggak):</strong> ${props.total_jumlah_nop}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Judul</th>
+                            <th>Nilai</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Kecamatan</td>
+                            <td>${props.kecamatan}</td>
+                        </tr>
+                        <tr>
+                            <td>Kelurahan</td>
+                            <td>${props.kelurahan}</td>
+                        </tr>
+                        <tr>
+                            <td>Total Tunggakan</td>
+                            <td>${props.total_jumlah_tunggakan}</td>
+                        </tr>
+                        <tr>
+                            <td>Total Nominal Tunggakan</td>
+                            <td>Rp ${props.total_nominal_tunggakan.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <td>Total NOP (Menunggak)</td>
+                            <td>${props.total_jumlah_nop}</td>
+                        </tr>
+                        <tr>
+                            <td>Level Ringan</td>
+                            <td>${props.nop_ringan}</td>
+                        </tr>
+                        <tr>
+                            <td>Level Sedang</td>
+                            <td>${props.nop_sedang}</td>
+                        </tr>
+                        <tr>
+                            <td>Level Berat</td>
+                            <td>${props.nop_berat}</td>
+                        </tr>
+                    </tbody>
+                </table>
             `);
+        });
+        var filterOption = document.getElementById('filterOption');
+        filterOption.addEventListener('change', function() {
+            var option = this.value;
+            var filteredData;
+
+            if (option === 'nop_berat') {
+                filteredData = data.sort((a, b) => b.nop_berat - a.nop_berat);
+            } else if (option === 'nop_sedang') {
+                filteredData = data.sort((a, b) => b.nop_sedang - a.nop_sedang);
+            } else if (option === 'nop_ringan') {
+                filteredData = data.sort((a, b) => b.nop_ringan - a.nop_ringan);
+            } else {
+                filteredData = data;
+            }
+
+            // Hapus layer GeoJSON sebelumnya
+            map.removeLayer(geoJsonLayer);
+
+            // Buat layer GeoJSON baru dengan data yang sudah difilter
+            geoJsonLayer = L.geoJson(filteredData.map(function(feature) {
+                return {
+                    type: 'Feature',
+                    geometry: JSON.parse(feature.geometry),
+                    properties: {
+                        kecamatan: feature.kecamatan,
+                        kelurahan: feature.kelurahan,
+                        total_jumlah_tunggakan: feature.total_jumlah_tunggakan,
+                        total_nominal_tunggakan: feature.total_nominal_tunggakan,
+                        total_jumlah_nop: feature.total_jumlah_nop,
+                        nop_ringan: feature.nop_ringan,
+                        nop_sedang: feature.nop_sedang,
+                        nop_berat: feature.nop_berat,
+                        backgroundColor: feature.backgroundColor,
+                        borderColor: feature.borderColor,
+                        cluster: feature.cluster
+                    }
+                };
+            }), {
+                style: function(feature) {
+                    return {
+                        fillColor: feature.properties.backgroundColor,
+                        fillOpacity: 0.6,
+                        color: feature.properties.borderColor,
+                        weight: 2
+                    }
+                },
+                onEachFeature: function(feature, layer) {
+                    layer.bindPopup(`
+                <strong>Kecamatan:</strong> ${feature.properties.kecamatan}<br>
+                <strong>Kelurahan:</strong> ${feature.properties.kelurahan}<br>
+                <strong>Level Ringan:</strong> ${feature.properties.nop_ringan}<br>
+                <strong>Level Sedang:</strong> ${feature.properties.nop_sedang}<br>
+                <strong>Level Berat:</strong> ${feature.properties.nop_berat}<br>
+            `);
+                }
+            }).addTo(map);
+
+            // Hapus label kelurahan sebelumnya
+            map.eachLayer(function(layer) {
+                if (layer instanceof L.Marker && layer.options.icon && layer.options.icon.options.html) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            // Tambahkan label kelurahan baru
+            geoJsonLayer.eachLayer(function(layer) {
+                var centroid = layer.getBounds().getCenter();
+                if (layer.feature.properties.kelurahan === "Rejo") {
+                    centroid.lng += 0.004; // Adjust this value to move the label to the right
+                }
+                L.marker(centroid, {
+                    icon: L.divIcon({
+                        className: 'kelurahan-label',
+                        html: `<div>${layer.feature.properties.kelurahan}</div>`,
+                        iconSize: [100, 40]
+                    })
+                }).addTo(map);
+            });
         });
     </script>
 @endsection

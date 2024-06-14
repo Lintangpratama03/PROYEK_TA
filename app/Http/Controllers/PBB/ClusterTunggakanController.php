@@ -310,7 +310,7 @@ class ClusterTunggakanController extends Controller
             $query->where('a.kelurahan', $kelurahan);
         }
 
-        $query = $query->orderBy("a.kelurahan", "DESC")->get();
+        $query = $query->orderBy("a.kecamatan", "DESC")->get();
         // dd($query);
         // Memformat data untuk K-Means
         $data = $query->map(function ($row) {

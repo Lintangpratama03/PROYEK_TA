@@ -42,9 +42,10 @@ class TunggakanController extends Controller
         $kelurahan = $request->kelurahan;
         // dd($kecamatan, $kelurahan);
         $tahun = $request->input('tahun', []);
-        if (!$tahun) {
-            $tahun = [date('Y')];
+        if (empty($tahun)) {
+            $tahun = [date('Y'), date('Y') - 1];
         }
+        // dd($tahun);
         // dd($wilayah);
         $view = '';
         $view = '( SELECT 
@@ -91,14 +92,16 @@ class TunggakanController extends Controller
                     a.kelurahan,
                     a.nama_subjek_pajak,
                     a.alamat_objek_pajak
-                ")
-            ->whereIn('a.tahun', $tahun);
+                ");
         if (!is_null($kecamatan)) {
             $query->where('a.kecamatan', $kecamatan);
         }
 
         if (!is_null($kelurahan)) {
             $query->where('a.kelurahan', $kelurahan);
+        }
+        if (!is_null($tahun)) {
+            $query->wherein('a.tahun', $tahun);
         }
 
         $query = $query->orderBy("a.tahun", "DESC")->get();
@@ -211,26 +214,16 @@ class TunggakanController extends Controller
         $tahun = $request->tahun ?? date('Y');
 
         // dd($tahun);
-        if (!is_null($request->tahun)) {
-            // Fetching records for a range between requested year and the current year
-            $d_data = DB::connection("pgsql_pbb")->table("data.v_detail_tunggakan_level_ta")
-                ->where('tahun_pajak', $tahun)
-                ->select('tahun_pajak', DB::raw('SUM(jumlah_tunggakan) as total_tunggakan'), 'kecamatan', 'kelurahan', 'nop', 'nominal_tunggakan')
-                ->groupBy('tahun_pajak', 'kecamatan', 'kelurahan', 'nop', 'nominal_tunggakan')
-                ->orderBy('total_tunggakan', 'DESC')
-                ->orderBy('tahun_pajak', 'DESC')
-                ->limit(5)
-                ->get();
-        } else {
-            // Fetching records for all years
-            $d_data = DB::connection("pgsql_pbb")->table("data.v_detail_tunggakan_level_ta")
-                ->select('tahun_pajak', DB::raw('SUM(jumlah_tunggakan) as total_tunggakan'), 'kecamatan', 'kelurahan', 'nop', 'nominal_tunggakan')
-                ->groupBy('tahun_pajak', 'kecamatan', 'kelurahan', 'nop', 'nominal_tunggakan')
-                ->orderBy('total_tunggakan', 'DESC')
-                ->orderBy('tahun_pajak', 'DESC')
-                ->limit(5)
-                ->get();
-        }
+
+        $d_data = DB::connection("pgsql_pbb")->table("data.v_detail_tunggakan_level_ta")
+            ->where('tahun_pajak', $tahun)
+            ->select('tahun_pajak', DB::raw('SUM(jumlah_tunggakan) as total_tunggakan'), 'kecamatan', 'kelurahan', 'nop', 'nominal_tunggakan')
+            ->groupBy('tahun_pajak', 'kecamatan', 'kelurahan', 'nop', 'nominal_tunggakan')
+            ->orderBy('total_tunggakan', 'DESC')
+            ->orderBy('tahun_pajak', 'DESC')
+            ->limit(5)
+            ->get();
+
         // dd($d_data);
 
         $arr = array();
