@@ -205,8 +205,8 @@
                             var bulan = config.dataPointIndex + 1;
                             //console.log(tahun, bulan);
 
-                            window.location.href = '{{ url('pdl/tunggakan/detail_tunggakan_perbulan') }}' + '/' +
-                                pajak + '/' + tahun + '/' + bulan + '/' + kecamatan + '/' + kelurahan;
+                            window.location.href = '{{ url('dashboard/tunggakan/detail_tunggakan_perbulan') }}' +
+                                '/' + tahun + '/' + bulan + '/' + kecamatan + '/' + kelurahan;
                         }
                     }
                 },

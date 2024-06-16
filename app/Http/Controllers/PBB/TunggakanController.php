@@ -45,68 +45,39 @@ class TunggakanController extends Controller
         if (empty($tahun)) {
             $tahun = [date('Y'), date('Y') - 1];
         }
-        // dd($tahun);
-        // dd($wilayah);
-        $view = '';
-        $view = '( SELECT 
-            nop,
-            npwpd,
-            tahun,
-            bulan,
-            nama_rekening,
-            nominal_ketetapan,
-            nominal_denda,
-            nominal_tunggakan,
-            kecamatan,
-            kelurahan,
-            nama_subjek_pajak,
-            alamat_objek_pajak
-        FROM data.detail_tunggakan_nop
-        GROUP BY 
-            nop,
-            npwpd,
-            tahun,
-            bulan,
-            nama_rekening,
-            nominal_ketetapan,
-            nominal_denda,
-            nominal_tunggakan,
-            kecamatan,
-            kelurahan,
-            nama_subjek_pajak,
-            alamat_objek_pajak
-        ORDER BY tahun DESC) AS a';
 
-        // Execute the query
-        $query = DB::connection("pgsql_pbb")->table(DB::connection("pgsql_pbb")->raw($view))
+        $query = DB::connection("pgsql_pbb")
+            ->table('data.detail_tunggakan_pbb AS a')
+            ->join('data.objek_pajak AS b', 'b.nop', '=', 'a.nop', 'left')
             ->selectRaw("
+                    a.tahun_pajak,
                     a.nop,
-                    a.npwpd,
-                    a.tahun,
-                    a.bulan,
-                    a.nama_rekening,
-                    a.nominal_ketetapan,
+                    a.tahun_sppt,
+                    a.pbb_terutang,
                     a.nominal_denda,
                     a.nominal_tunggakan,
-                    a.kecamatan,
-                    a.kelurahan,
-                    a.nama_subjek_pajak,
-                    a.alamat_objek_pajak
+                    b.npwp,
+                    b.kecamatan,
+                    b.kelurahan,
+                    b.nama_subjek_pajak,
+                    b.alamat_objek_pajak
+
                 ");
         if (!is_null($kecamatan)) {
-            $query->where('a.kecamatan', $kecamatan);
+            $query->where('b.kecamatan', $kecamatan);
         }
 
         if (!is_null($kelurahan)) {
-            $query->where('a.kelurahan', $kelurahan);
+            $query->where('b.kelurahan', $kelurahan);
         }
+
         if (!is_null($tahun)) {
-            $query->wherein('a.tahun', $tahun);
+            $query->whereIn('a.tahun_sppt', $tahun);
         }
 
-        $query = $query->orderBy("a.tahun", "DESC")->get();
-
+        $query = $query->orderBy("a.tahun_sppt", "DESC")->get();
         // dd($query);
+
         $arr = array();
         if ($query->count() > 0) {
             foreach ($query as $key => $d) {
@@ -115,13 +86,11 @@ class TunggakanController extends Controller
 
                 $arr[] = array(
                     "nop" => $detail_nop,
-                    "npwpd" => $d->npwpd,
-                    "tahun" => $d->tahun,
-                    "bulan" => $d->bulan,
-                    "nama_rekening" => $d->nama_rekening,
-                    "nominal_ketetapan" => number_format($d->nominal_ketetapan),
-                    "nominal_denda" => number_format($d->nominal_denda),
-                    "nominal_tunggakan" => number_format($d->nominal_tunggakan),
+                    "npwp" => $d->npwp,
+                    "tahun" => $d->tahun_sppt,
+                    "nominal_ketetapan" => "Rp. " . number_format($d->pbb_terutang),
+                    "nominal_denda" => "Rp. " . number_format($d->nominal_denda),
+                    "nominal_tunggakan" => "Rp. " . number_format($d->nominal_tunggakan),
                     "kecamatan" => $d->kecamatan,
                     "kelurahan" => $d->kelurahan,
                     "nama_subjek_pajak" => $d->nama_subjek_pajak,
@@ -140,12 +109,12 @@ class TunggakanController extends Controller
         $level = $request->level;
 
         $query = DB::connection("pgsql_pbb")->table("data.v_tunggakan_level_nop")
-            ->leftJoin("data.objek_pajak_ta", "data.v_tunggakan_level_nop.nop", "=", "data.objek_pajak_ta.nop")
+            ->leftJoin("data.objek_pajak", "data.v_tunggakan_level_nop.nop", "=", "data.objek_pajak.nop")
             ->selectRaw("v_tunggakan_level_nop.nop, 
                         v_tunggakan_level_nop.jumlah_tunggakan, 
                         v_tunggakan_level_nop.nominal_tunggakan, 
                         v_tunggakan_level_nop.level,
-                        objek_pajak_ta.nama_subjek_pajak")
+                        objek_pajak.nama_subjek_pajak")
             ->when($level, function ($query, $level) {
                 return $query->where('level', $level);
             })
@@ -215,14 +184,23 @@ class TunggakanController extends Controller
 
         // dd($tahun);
 
-        $d_data = DB::connection("pgsql_pbb")->table("data.v_detail_tunggakan_level_ta")
-            ->where('tahun_pajak', $tahun)
-            ->select('tahun_pajak', DB::raw('SUM(jumlah_tunggakan) as total_tunggakan'), 'kecamatan', 'kelurahan', 'nop', 'nominal_tunggakan')
-            ->groupBy('tahun_pajak', 'kecamatan', 'kelurahan', 'nop', 'nominal_tunggakan')
-            ->orderBy('total_tunggakan', 'DESC')
-            ->orderBy('tahun_pajak', 'DESC')
+        $d_data = DB::connection("pgsql_pbb")
+            ->table('data.detail_tunggakan_pbb AS a')
+            ->selectRaw("
+                a.tahun_sppt,
+                SUM(a.nominal_tunggakan) as total_tunggakan,
+                b.kecamatan,
+                b.kelurahan,
+                a.nop
+            ")
+            ->join('data.objek_pajak AS b', 'b.nop', '=', 'a.nop')
+            ->where('a.tahun_sppt', $tahun)
+            ->groupBy('a.tahun_sppt', 'b.kecamatan', 'b.kelurahan', 'a.nop')
+            ->orderBy('total_tunggakan', 'desc')
+            ->orderBy('a.tahun_sppt', 'desc')
             ->limit(5)
             ->get();
+
 
         // dd($d_data);
 
@@ -235,13 +213,12 @@ class TunggakanController extends Controller
                 $arr[] = array(
                     "no" => $no++,  // Tambahkan nomor urut yang bertambah setiap iterasi
                     "nop" => $d->nop,
-                    "jumlah_tunggakan" => $detail,
-                    "nominal" => rupiahFormat($d->nominal_tunggakan)
+                    "nominal" => $detail
                 );
             }
         }
         return Datatables::of($arr)
-            ->rawColumns(['jumlah_tunggakan'])
+            ->rawColumns(['nominal'])
             ->make(true);
     }
 
@@ -258,27 +235,28 @@ class TunggakanController extends Controller
         $tahun = $request->tahun;
 
         $query = "
-            SELECT * 
-            FROM \"data\".\"detail_tunggakan_nop\"
-            WHERE \"nop\" = :nop AND \"tahun\" = :tahun
+            SELECT a.*, b.*
+            FROM \"data\".\"detail_tunggakan_pbb\" AS a
+            JOIN \"data\".\"objek_pajak\" AS b ON a.\"nop\" = b.\"nop\"
+            WHERE a.\"nop\" = :nop AND a.\"tahun_sppt\" = :tahun_sppt
         ";
 
         // Menjalankan query dengan DB facade dan memasukkan hasilnya ke dalam variabel
-        $results = DB::connection('pgsql_pbb')->select($query, ['nop' => $nop, 'tahun' => $tahun]);
+        $results = DB::connection('pgsql_pbb')->select($query, ['nop' => $nop, 'tahun_sppt' => $tahun]);
+
         // dd($results);
         $arr = array();
         // if($tinggi->count() > 0){
         foreach ($results as $key => $d) {
             $arr[] = array(
                 "nama_subjek_pajak" => $d->nama_subjek_pajak,
-                "nama_objek_pajak" => $d->nama_objek_pajak,
                 "nama_rekening" => $d->nama_rekening,
                 "kecamatan" => $d->kecamatan,
+                "tahun" => $d->tahun_sppt,
                 "kelurahan" => $d->kelurahan,
-                "bulan" => $d->bulan,
-                "nominal_ketetapan" => $d->nominal_ketetapan,
-                "nominal_denda" => $d->nominal_denda,
-                "nominal_tunggakan" => $d->nominal_tunggakan
+                "nominal_ketetapan" => "Rp" . number_format($d->pbb_terutang),
+                "nominal_denda" => "Rp" . number_format($d->nominal_denda),
+                "nominal_tunggakan" => "Rp" . number_format($d->nominal_tunggakan)
             );
         }
         // }
@@ -435,27 +413,25 @@ class TunggakanController extends Controller
         // dd($nop);
         $view = '( SELECT 
             nop,
-            npwpd,
+            npwp,
             kecamatan,
             kelurahan,
             no_telp,
             email,
             nama_subjek_pajak,
             alamat_subjek_pajak,
-            nama_objek_pajak,
             nama_rekening,
             alamat_objek_pajak
-        FROM data.objek_pajak_ta
+        FROM data.objek_pajak
         GROUP BY 
             nop,
-            npwpd,
+            npwp,
             kecamatan,
             kelurahan,
             no_telp,
             email,
             nama_subjek_pajak,
             alamat_subjek_pajak,
-            nama_objek_pajak,
             nama_rekening,
             alamat_objek_pajak
         ORDER BY MAX(nop) DESC) AS a';
@@ -464,14 +440,13 @@ class TunggakanController extends Controller
         $query = DB::connection("pgsql_pbb")->table(DB::connection("pgsql_pbb")->raw($view))
             ->selectRaw("
                     a.nop,
-                    a.npwpd,
+                    a.npwp,
                     a.kecamatan,
                     a.kelurahan,
                     a.no_telp,
                     a.email,
                     a.nama_subjek_pajak,
                     a.alamat_subjek_pajak,
-                    a.nama_objek_pajak,
                     a.nama_rekening,
                     a.alamat_objek_pajak
                 ")
@@ -486,14 +461,13 @@ class TunggakanController extends Controller
             foreach ($query as $d) {
                 $arr[] = [
                     'nop' => $d->nop,
-                    'npwpd' => $d->npwpd,
+                    'npwp' => $d->npwp,
                     'kecamatan' => $d->kecamatan,
                     'kelurahan' => $d->kelurahan,
                     'no_telp' => $d->no_telp,
                     'email' => $d->email,
                     'nama_subjek_pajak' => $d->nama_subjek_pajak,
                     'alamat_subjek_pajak' => $d->alamat_subjek_pajak,
-                    'nama_objek_pajak' => $d->nama_objek_pajak,
                     'alamat_objek_pajak' => $d->alamat_objek_pajak,
                     'nama_rekening' => $d->nama_rekening,
                 ];
@@ -800,9 +774,9 @@ class TunggakanController extends Controller
         $nop = strtoupper($request->nop);
 
         $sismiop = DB::connection("pgsql_pbb")
-            ->table("data.detail_tunggakan_nop")
-            ->leftJoin("data.objek_pajak_ta", "data.detail_tunggakan_nop.nop", "=", "data.objek_pajak_ta.nop")
-            ->where('data.detail_tunggakan_nop.nop', $nop)
+            ->table("data.detail_tunggakan_pbb")
+            ->leftJoin("data.objek_pajak", "data.detail_tunggakan_pbb.nop", "=", "data.objek_pajak.nop")
+            ->where('data.detail_tunggakan_pbb.nop', $nop)
             ->get();
         // dd($sismiop);
         $arr = array();
@@ -810,8 +784,8 @@ class TunggakanController extends Controller
         foreach ($sismiop as $key => $d) {
             $arr[] =
                 array(
-                    "tahun_pajak" => $d->tahun,
-                    "nominal" => number_format($d->nominal_ketetapan),
+                    "tahun_pajak" => $d->tahun_sppt,
+                    "nominal" => number_format($d->pbb_terutang),
                     "nama_subjek_pajak" => $d->nama_subjek_pajak,
                     "alamat_subjek_pajak" => $d->alamat_subjek_pajak,
                     "alamat_objek_pajak" => $d->alamat_objek_pajak,

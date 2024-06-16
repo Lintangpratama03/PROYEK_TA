@@ -137,8 +137,8 @@
                     }
                 },
                 columns: [{
-                        data: 'npwpd',
-                        name: 'npwpd'
+                        data: 'npwp',
+                        name: 'npwp'
                     },
                     {
                         data: 'nama_subjek_pajak',

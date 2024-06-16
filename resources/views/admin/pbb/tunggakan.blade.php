@@ -69,9 +69,9 @@
                             <table class="table table-tunggakan-nop">
                                 <thead>
                                     <tr>
-                                        <th rowspan="2" style="text-align: center; vertical-align: middle;">Tahun</th>
-                                        <th rowspan="2" style="text-align: center; vertical-align: middle;">Bulan</th>
-                                        <th colspan="3" style="text-align: center;background-color:#f3e8ae">
+                                        <th rowspan="2" style="text-align: center; vertical-align: middle;">Tahun SPPT
+                                        </th>
+                                        <th colspan="4" style="text-align: center;background-color:#f3e8ae">
                                             IDENTITAS</th>
                                         <th colspan="3" style="text-align: center;background-color:#cecece">
                                             NOMINAL</th>
@@ -80,10 +80,11 @@
                                     <tr>
                                         <th>NOP</th>
                                         <th>Nama</th>
-                                        <th>Alamat Pajak</th>
-                                        <th>Nominal Ketetapan</th>
+                                        <th>Kecamatan</th>
+                                        <th>Kelurahan</th>
+                                        <th>PBB Terhutang</th>
                                         <th>Denda</th>
-                                        <th>Total Tunggakan</th>
+                                        <th>Total Tunggakan PBB</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -135,8 +136,8 @@
                                         <tr>
                                             <th>NOP</th>
                                             <th>Nama</th>
-                                            <th>jumlah Tungakan</th>
                                             <th>Nominal Tunggakan</th>
+                                            <th>Jumlah Tunggakan</th>
                                             <th>Level</th>
                                         </tr>
                                     </thead>
@@ -175,7 +176,6 @@
                                         <tr>
                                             <th>#</th>
                                             <th>NOP</th>
-                                            <th>Jumlah Tunggakan</th>
                                             <th>Nominal Tunggakan</th>
                                         </tr>
                                     </thead>
@@ -345,10 +345,6 @@
                         name: 'tahun'
                     },
                     {
-                        data: 'bulan',
-                        name: 'bulan'
-                    },
-                    {
                         data: 'nop',
                         name: 'nop'
                     },
@@ -357,8 +353,12 @@
                         name: 'nama_subjek_pajak'
                     },
                     {
-                        data: 'alamat_objek_pajak',
-                        name: 'alamat_objek_pajak'
+                        data: 'kecamatan',
+                        name: 'kecamatan'
+                    },
+                    {
+                        data: 'kelurahan',
+                        name: 'kelurahan'
                     },
                     {
                         data: 'nominal_ketetapan',
@@ -460,13 +460,10 @@
                 columns: [{
                         data: 'no',
                         name: 'no'
-                    }, {
-                        data: 'nop',
-                        name: 'nop'
                     },
                     {
-                        data: 'jumlah_tunggakan',
-                        name: 'jumlah_tunggakan'
+                        data: 'nop',
+                        name: 'nop'
                     },
                     {
                         data: 'nominal',

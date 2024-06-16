@@ -71,7 +71,7 @@ class DashboardController extends Controller
         a.tahun,
         a.bulan,
         sum(a.total_tunggakan) as total_tunggakan
-    ");
+            ");
 
         if (!is_null($bulan)) {
             if (is_array($bulan)) {
@@ -140,11 +140,12 @@ class DashboardController extends Controller
 
     public function detail_tunggakan_perbulan($tahun, $bulan, $kecamatan = null, $kelurahan = null)
     {
+        // dd($tahun, $bulan, $kecamatan, $kelurahan);
         $tahun = $tahun;
         $bulan = $bulan;
         $kecamatan = $kecamatan;
         $kelurahan = $kelurahan;
-        return view("admin.pdl.detail_tunggakan_bulanan")->with(compact('pajak', 'tahun', 'bulan', 'kecamatan', 'kelurahan'));
+        return view("admin.pbb.detail_tunggakan_bulanan")->with(compact('tahun', 'bulan', 'kecamatan', 'kelurahan'));
     }
 
     public function datatable_detail_tunggakan_perbulan(Request $request)
@@ -155,30 +156,49 @@ class DashboardController extends Controller
         $kecamatan = $request->kecamatan;
         $kelurahan = $request->kelurahan;
 
-        $whre_condition = "";
-        if (!is_null($kecamatan) && is_null($kelurahan)) {
-            $whre_condition = "and nama_kecamatan = '" . $kecamatan . "' and extract(year from a.tanggal_diterima) = '$tahun'";
-        } elseif (!is_null($kecamatan) && !is_null($kelurahan)) {
-            $whre_condition = "and nama_kecamatan = '$kecamatan' and nama_desa = '$kelurahan' and extract(year from a.tanggal_diterima) = '$tahun'";
-        } else {
-            $whre_condition = "and extract(year from a.tanggal_diterima) = '$tahun'";
-        }
-        $select = "select 
-        npwpd,  c.nama nama_op, c.jalan alamat_op, nama_wp, alamat_wp, masa_pajak_tahun, masa_pajak_bulan, masa_awal, masa_akhir, a.jumlah_pembayaran::int as nominal
-        from data.tb_tunggakan a
-        left join master.tb_jenis_pajak b
-        on a.kode_akun_pajak::int = b.id
-        left join data.tb_op c
-        on a.nop = c.nop
-        LEFT JOIN master.kecamatan kec ON C.kode_kecamatan = kec.kode_kecamatan
-        LEFT JOIN master.desa des ON C.kode_desa = des.kode_desa 
-        where ntpp is not null and a.deleted_at is null
+        $query = DB::connection("pgsql_pbb")->table('data.total_tunggakan_per_bulan AS a')
+            ->selectRaw("
+        a.tahun,
+        a.bulan,
+        sum(a.total_tunggakan) as total_tunggakan
+            ");
 
-        and b.nama_pajak= '$pajak'
-        $whre_condition
-        and extract(month from a.tanggal_diterima) = $bulan";
-        //dd($select);
-        $sismiop = DB::connection("pgsql_pdl")->select($select);
+        if (!is_null($bulan)) {
+            if (is_array($bulan)) {
+                $query->whereIn('a.bulan', $bulan);
+            } else {
+                $query->where('a.bulan', $bulan);
+            }
+        }
+
+        if (!is_null($tahun)) {
+            if (is_array($tahun)) {
+                $query->whereIn('a.tahun', $tahun);
+            } else {
+                $query->where('a.tahun', $tahun);
+            }
+        }
+
+        if (!is_null($kecamatan)) {
+            if (is_array($kecamatan)) {
+                $query->whereIn('a.kecamatan', $kecamatan);
+            } else {
+                $query->where('a.kecamatan', $kecamatan);
+            }
+        }
+
+        if (!is_null($kelurahan)) {
+            if (is_array($kelurahan)) {
+                $query->whereIn('a.kelurahan', $kelurahan);
+            } else {
+                $query->where('a.kelurahan', $kelurahan);
+            }
+        }
+
+        $query->groupBy('a.tahun', 'a.bulan');
+        $query->orderBy('a.tahun', 'DESC')->orderBy('a.bulan', 'ASC');
+
+        $results = $query->get();
         // $dbconnect = DB::connection("pgsql_pdl");
         // dd($dbconnect);
         $arr = array();
@@ -187,7 +207,7 @@ class DashboardController extends Controller
             7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
         $nama_bln = $Bulan[$bulan];
-        foreach ($sismiop as $key => $d) {
+        foreach ($results as $key => $d) {
             $arr[] = array(
                 "no" => $key + 1,
                 "npwd" => $d->npwpd,

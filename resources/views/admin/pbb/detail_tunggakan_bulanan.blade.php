@@ -1,15 +1,21 @@
 @extends('admin.layout.main')
-@section('title', 'Detail Penerimaan PBB - Smart Dashboard')
+@section('title', 'Detail Tunggakan Bulanan PBB - Smart Dashboard')
 
 @section('content')
+    {{-- <style>
+    .dt-buttons{
+        text-align: center;
+    }
+</style> --}}
     <div class="container-fluid">
         <div class="page-header">
             <div class="row">
                 <div class="col-sm-6">
-                    <h3>Detail Tunggakan </h3>
+                    <h3>Penerimaan PDL</h3>
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="#">PBB</a></li>
-                        <li class="breadcrumb-item active">Detail Tunggakan (NOP)</li>
+                        <li class="breadcrumb-item"><a href="#">PDL</a></li>
+                        <li class="breadcrumb-item active">Penerimaan</li>
+                        <li class="breadcrumb-item active">Detail penerimaan Berdasarkan Tunggakan Bulanan PBB</li>
                     </ol>
                 </div>
                 <div class="col-sm-6">
@@ -26,14 +32,23 @@
                 <div class="col-xl-12">
                     <div class="card o-hidden">
                         <div class="card-header pb-0">
-                            <h6>Tunggakan</h6>
+                            <h6>Detail Penerimaan Berdasarkan Tunggakan Bulanan PBB </h6>
                             <h6></h6>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-detail">
+                                <table class="table table-detail-penerimaan-bulanan">
                                     <thead>
                                         <tr>
+                                            <th>No</th>
+                                            <th>NPWD</th>
+                                            <th>Nama Objek Pajak</th>
+                                            <th>Nama Wajib Pajak</th>
+                                            <th>Alamat Objek Pajak</th>
+                                            <th>Alamat Wajib Pajak</th>
+                                            <th>Tahun SPT</th>
+                                            <th>Bulan SPT</th>
+                                            <th>Nominal</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -56,6 +71,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
     <script>
+        function formatRupiah(angka) {
+            var options = {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 2,
+            };
+            var formattedNumber = angka.toLocaleString('ID', options);
+            return formattedNumber;
+        }
+
         function newexportaction(e, dt, button, config) {
             var self = this;
             var oldStart = dt.settings()[0]._iDisplayStart;
@@ -96,32 +121,20 @@
             });
             // Requery the server with the new one-time export settings
             dt.ajax.reload();
-        }
+        };
 
-        function formatRupiah(angka) {
-            var options = {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 2,
-            };
-            var formattedNumber = angka.toLocaleString('ID', options);
-            return formattedNumber;
-        }
-
-
-        function table_detail() {
-            let nop = "{{ $nop }}";
+        function table_detail_penerimaan_bulanan() {
             let tahun = "{{ $tahun }}";
-            var table = $(".table-detail").DataTable({
-                dom: "<'row'<'col-sm-12 col-md-3'l><'col-sm-12 col-md-6 text-center'B><'col-sm-12 col-md-3'>>" +
-                    // dengan Button
-                    "<'row'<'col-sm-12'tr>>" + // Add table
-                    "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            let bulan = "{{ $bulan }}";
+            let kecamatan = "{{ $kecamatan }}";
+            let kelurahan = "{{ $kelurahan }}";
+            var table = $(".table-detail-penerimaan-bulanan").DataTable({
+                "dom": 'Blfrtip',
                 buttons: [{
                     "extend": 'excel',
                     "text": '<i class="fa fa-file-excel-o" style="color: white;"> Export Excel</i>',
-                    "titleAttr": 'Export to Excel',
-                    "filename": 'Detail Tunggakan Tertinggi ',
+                    "titleAttr": 'Excel',
+                    "filename": 'Detail Tunggakan Bulanan PBB',
                     "action": newexportaction
                 }, ],
                 processing: true,
@@ -129,68 +142,78 @@
                 responsive: true,
                 searchDelay: 2000,
                 ajax: {
-                    url: '{{ route('pbb.tunggakan.datatable_detail_tunggakan_paling_tinggi') }}',
+                    url: '{{ route('dashboard.tunggakan.datatable_detail_penerimaan_perbulan') }}',
                     type: 'GET',
                     data: {
-                        "nop": nop,
-                        "tahun": tahun
+                        "tahun": tahun,
+                        "bulan": bulan,
+                        "kecamatan": kecamatan,
+                        "kelurahan": kelurahan,
                     }
                 },
                 columns: [{
-                        data: 'tahun',
-                        name: 'tahun',
-                        title: 'Tahun SPPT'
+                        data: 'no',
+                        name: 'no',
+                        orderable: false,
+                        searchable: false,
+                        render: function(data, type, row, meta) {
+                            return meta.row + 1;
+                        }
                     },
                     {
-                        data: 'nama_subjek_pajak', // data source for column
-                        name: 'nama_subjek_pajak', // column name as in SQL query or data model
-                        title: 'Nama Subjek Pajak' // optional, header title
+                        data: 'npwd',
+                        name: 'npwd'
                     },
                     {
-                        data: 'nama_rekening',
-                        name: 'nama_rekening',
-                        title: 'Jenis Pajak'
+                        data: 'nama_op',
+                        name: 'nama_op'
                     },
                     {
-                        data: 'kecamatan',
-                        name: 'kecamatan',
-                        title: 'Kecamatan'
+                        data: 'nama_wp',
+                        name: 'nama_wp'
                     },
                     {
-                        data: 'kelurahan',
-                        name: 'kelurahan',
-                        title: 'Kelurahan'
+                        data: 'alamat_op',
+                        name: 'alamat_op'
                     },
                     {
-                        data: 'nominal_ketetapan',
-                        name: 'nominal_ketetapan',
-                        title: 'Nominal Ketetapan'
+                        data: 'alamat_wp',
+                        name: 'alamat_wp'
                     },
                     {
-                        data: 'nominal_denda',
-                        name: 'nominal_denda',
-                        title: 'Nominal Denda'
+                        data: 'masa_pajak_tahun',
+                        name: 'masa_pajak_tahun'
                     },
                     {
-                        data: 'nominal_tunggakan',
-                        name: 'nominal_tunggakan',
-                        title: 'Nominal Tunggakan'
-                    }
+                        data: 'masa_pajak_bulan',
+                        name: 'masa_pajak_bulan'
+                    },
+                    {
+                        data: 'nominal',
+                        name: 'nominal'
+                    },
                 ],
                 order: [
-                    [0, 'asc']
+                    [0, 'desc']
                 ],
             });
         }
         document.addEventListener("DOMContentLoaded", function() {
-            var tahun = "{{ $tahun }}";
-            var nopPBB = "{{ $nop }}";
-            document.querySelector('.card-header h6:nth-child(2)').textContent =
-                "NOP(tahun) Tunggakan : " + nopPBB + "(" + tahun + ")";
+            var bulan_array = [
+                "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September",
+                "Oktober", "November", "Desember"
+            ];
+
+            var status = "{{ $bulan }}";
+            var bulan = bulan_array[parseInt(status) - 1];
+            document.querySelector('.card-header h6:nth-child(2)').textContent = "Bulan Pajak : " + bulan;
         });
+
+
+
         $(document).ready(function() {
 
-            table_detail();
+            table_detail_penerimaan_bulanan();
         })
     </script>
 @endsection

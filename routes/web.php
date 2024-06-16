@@ -41,7 +41,7 @@ Route::middleware($middleware_auth)->group(function () {
     Route::post('/user_do_reset_password', 'Auth\LoginController@userDoResetPassword')->name('user.do_reset_password');
 
     Route::get('/', function () {
-        return view("admin.pad.index");
+        return view("admin.pbb.dashboard");
     });
 
 
@@ -264,7 +264,7 @@ Route::middleware($middleware_auth)->group(function () {
                 Route::get('/tunggakan_perbulan', 'PBB\DashboardController@tunggakan_perbulan')->name('tunggakan_perbulan');
 
                 Route::get('datatable_detail_tunggakan_perbulan', 'PBB\DashboardController@datatable_detail_tunggakan_perbulan')->name('datatable_detail_tunggakan_perbulan');
-                Route::get('detail_tunggakan_perbulan/{pajak}/{tahun}/{bulan}/{kecamatan?}/{kelurahan?}', 'PBB\DashboardController@detail_tunggakan_perbulan')->name('detail_tunggakan_perbulan');
+                Route::get('detail_tunggakan_perbulan/{tahun}/{bulan}/{kecamatan?}/{kelurahan?}', 'PBB\DashboardController@detail_tunggakan_perbulan')->name('detail_tunggakan_perbulan');
             });
         });
     });
