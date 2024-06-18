@@ -95,12 +95,58 @@
 
         <div class="row">
             <div class="col-xl-8 col-md-6 col-lg-3">
+
                 <div class="col-xl-12">
                     <div class="card o-hidden">
                         <div class="card-header pb-0">
+                            <h6>Grafik Tunggakan</h6>
                             <div class="row">
-                                <div class="col-xl-5">
-                                    <h6>Grafik Tunggakan (Wilayah)</h6>
+                                <div class="col-xl-12">
+                                    <div class="row">
+                                        <div class="col-xl-3 mb-2 col-md-4 col-sm-6">
+                                            <select name="nop_tunggakan" id="nop_tunggakan"
+                                                class="form-control btn-square js-example-basic-single col-sm-12 "
+                                                style="border: 1px solid #808080;border-radius:5px;">
+                                                <option value="total_jumlah_nop" class = "d-flex align-items-center">
+                                                    Pilih Level Nop
+                                                </option>
+                                                <option value="nop_ringan" class = "d-flex align-items-center">
+                                                    Level Ringan NOP
+                                                </option>
+                                                <option value="nop_sedang" class = "d-flex align-items-center">
+                                                    Level Sedang NOP
+                                                </option>
+                                                <option value="nop_berat" class = "d-flex align-items-center">
+                                                    Level Berat NOP
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-xl-3 mb-2 col-md-4 col-sm-6">
+                                            <select name="tunggakan"
+                                                id="tunggakan"class="form-control btn-square js-example-basic-single col-sm-12"
+                                                style="border: 1px solid #808080;">
+                                                <option value="total_jumlah_tunggakan" class = "d-flex align-items-center">
+                                                    Pilih Level Tunggakan
+                                                </option>
+                                                <option value="total_jumlah_tunggakan_ringan"
+                                                    class = "d-flex align-items-center">
+                                                    Level Ringan Tunggakan
+                                                </option>
+                                                <option value="total_jumlah_tunggakan_sedang"
+                                                    class = "d-flex align-items-center">
+                                                    Level Sedang Tunggakan
+                                                </option>
+                                                <option value="total_jumlah_tunggakan_berat"
+                                                    class = "d-flex align-items-center">
+                                                    Level Berat Tunggakan
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-xl-2 mb-2 col-md-4 col-sm-6">
+                                            <a class="btn btn-primary btn-square" type="button"
+                                                onclick="filterGrafik()">Terapkan<span class="caret"></span></a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -195,6 +241,8 @@
         };
         var curKelurahan = $('#kelurahan').val();
         var curKecamatan = $('#kecamatan').val();
+        var curNop = $('#nop_tunggakan').val();
+        var curTunggakan = $('#tunggakan').val();
 
         function filterKel() {
             $('#kecamatan').on('change', function() {
@@ -236,6 +284,14 @@
                 // loadClusterChart(kecamatan, kelurahan);
                 // loadClusterChart1(kecamatan, kelurahan);
                 loadClusterChartNop(kecamatan, kelurahan);
+            }
+        }
+
+        function filterGrafik() {
+            var nop_tunggakan = $('#nop_tunggakan').val();
+            var tunggakan = $('#tunggakan').val();
+            if (nop_tunggakan !== null || tunggakan !== null) {
+                loadClusterChartNop(nop_tunggakan, tunggakan);
             }
         }
 
@@ -581,13 +637,16 @@
         //     });
         // }
 
-        function loadClusterChartNop(kecamatan = curKecamatan, kelurahan = curKelurahan) {
+        function loadClusterChartNop(nop_tunggakan = curNop, tunggakan = curTunggakan) {
+            for (const instance of Object.values(Chart.instances)) {
+                instance.destroy();
+            }
             $.ajax({
                 url: '{{ route('pbb.cluster.data_tunggakan_wilayah_cluster_nop') }}',
                 type: 'GET',
                 data: {
-                    "kecamatan": kecamatan,
-                    "kelurahan": kelurahan
+                    "nop_tunggakan": nop_tunggakan,
+                    "tunggakan": tunggakan
                 },
                 dataType: 'json',
                 success: function(data) {

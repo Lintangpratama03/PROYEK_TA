@@ -266,11 +266,25 @@ class ClusterTunggakanController extends Controller
 
     public function data_tunggakan_wilayah_cluster_nop(Request $request)
     {
-        $kecamatan = $request->kecamatan;
-        $kelurahan = $request->kelurahan;
+        // dd($request->all());
+        $nop = $request->nop_tunggakan;
+        $tunggakan = $request->tunggakan;
 
         // Mendapatkan data dari view
         $view = '( SELECT 
+        kecamatan,
+        kelurahan,
+        nop_berat,
+        nop_sedang,
+        nop_ringan,
+        total_nominal_tunggakan,
+        total_jumlah_tunggakan,
+        total_jumlah_tunggakan_berat,
+        total_jumlah_tunggakan_sedang,
+        total_jumlah_tunggakan_ringan,
+        total_jumlah_nop
+        FROM data.v_tunggakan_level_daerah
+        GROUP BY 
             kecamatan,
             kelurahan,
             nop_berat,
@@ -278,48 +292,36 @@ class ClusterTunggakanController extends Controller
             nop_ringan,
             total_nominal_tunggakan,
             total_jumlah_tunggakan,
-            total_jumlah_nop
-            FROM data.v_tunggakan_level_daerah
-            GROUP BY 
-                kecamatan,
-                kelurahan,
-                nop_berat,
-                nop_sedang,
-                nop_ringan,
-                total_nominal_tunggakan,
-                total_jumlah_tunggakan,
-                total_jumlah_nop) AS a';
+            total_jumlah_tunggakan_berat,
+            total_jumlah_tunggakan_sedang,
+            total_jumlah_tunggakan_ringan,
+            total_jumlah_nop) AS a';
 
         $query = DB::connection("pgsql_pbb")->table(DB::connection("pgsql_pbb")->raw($view))
             ->selectRaw("
-                a.kecamatan,
-                a.kelurahan,
-                a.nop_berat,
-                a.nop_sedang,
-                a.nop_ringan,
-                a.total_nominal_tunggakan,
-                a.total_jumlah_tunggakan,
-                a.total_jumlah_nop
-            ");
-
-        if (!is_null($kecamatan)) {
-            $query->where('a.kecamatan', $kecamatan);
-        }
-
-        if (!is_null($kelurahan)) {
-            $query->where('a.kelurahan', $kelurahan);
-        }
-
+            a.kecamatan,
+            a.kelurahan,
+            a.nop_berat,
+            a.nop_sedang,
+            a.nop_ringan,
+            a.total_nominal_tunggakan,
+            a.total_jumlah_tunggakan,
+            a.total_jumlah_tunggakan_berat,
+            a.total_jumlah_tunggakan_sedang,
+            a.total_jumlah_tunggakan_ringan,
+            a.total_jumlah_nop
+        ");
         $query = $query->orderBy("a.kecamatan", "DESC")->get();
         // dd($query);
-        // Memformat data untuk K-Means
-        $data = $query->map(function ($row) {
+
+        // Memformat data untuk K-Means berdasarkan request nop dan tunggakan
+        $data = $query->map(function ($row) use ($nop, $tunggakan) {
             return [
-                $row->total_jumlah_tunggakan,
-                $row->total_jumlah_nop,
+                $row->{$tunggakan},
+                $row->{$nop},
             ];
         })->toArray();
-
+        // dd($data);
         $kmeans = new KMeans(3, KMeans::INIT_KMEANS_PLUS_PLUS);
         $clusters = $kmeans->cluster($data);
         // dd($clusters);
@@ -336,8 +338,8 @@ class ClusterTunggakanController extends Controller
                     'nop_ringan' => $row->nop_ringan,
                     'nop_sedang' => $row->nop_sedang,
                     'nop_berat' => $row->nop_berat,
-                    'total_jumlah_tunggakan' => $row->total_jumlah_tunggakan,
-                    'total_jumlah_nop' => $row->total_jumlah_nop,
+                    'total_jumlah_tunggakan' => $row->{$tunggakan},
+                    'total_jumlah_nop' => $row->{$nop},
                     'cluster' => $i
                 ];
             }
@@ -345,6 +347,7 @@ class ClusterTunggakanController extends Controller
 
         return response()->json($arr);
     }
+
 
     public function datatable_tunggakan_cluster_hasil_1(Request $request)
     {
