@@ -169,6 +169,9 @@ Route::middleware($middleware_auth)->group(function () {
                 Route::get('/data_tunggakan_wilayah_cluster_1', 'PBB\ClusterTunggakanController@data_tunggakan_wilayah_cluster_1')->name('data_tunggakan_wilayah_cluster_1');
                 Route::get('/data_tunggakan_wilayah_cluster_nop', 'PBB\ClusterTunggakanController@data_tunggakan_wilayah_cluster_nop')->name('data_tunggakan_wilayah_cluster_nop');
                 Route::get('/datatable_tunggakan_cluster_hasil', 'PBB\ClusterTunggakanController@datatable_tunggakan_cluster_hasil')->name('datatable_tunggakan_cluster_hasil');
+
+                Route::get('sub_tunggakan_wilayah/{kelurahan}', 'PBB\ClusterTunggakanController@sub_tunggakan_wilayah')->name('sub_tunggakan_wilayah');
+                Route::get('datatable_sub_tunggakan_wilayah', 'PBB\ClusterTunggakanController@datatable_sub_tunggakan_wilayah')->name('datatable_sub_tunggakan_wilayah');
             });
             Route::prefix('peta-tunggakan')->name('peta-tunggakan.')->group(function () {
                 Route::get('/', 'PBB\PetaTunggakanController@index')->name('index');

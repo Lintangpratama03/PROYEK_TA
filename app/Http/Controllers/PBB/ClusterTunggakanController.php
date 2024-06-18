@@ -103,7 +103,7 @@ class ClusterTunggakanController extends Controller
                 $nop_sedang = $row->nop_sedang ?? 0;
                 $nop_berat = $row->nop_berat ?? 0;
 
-                $route = url('pbb/tunggakan/sub_tunggakan_wilayah') . "/" . $row->kelurahan;
+                $route = url('pbb/cluster-tunggakan/sub_tunggakan_wilayah') . "/" . $row->kelurahan;
                 $rowetail_kelurahan = "<a target='_BLANK' href='" . $route . "' ><u>" . $row->kelurahan . "</u> <i class='fa fa-arrow-circle-o-right'></i></a>";
 
                 $arr[] = [
@@ -167,7 +167,7 @@ class ClusterTunggakanController extends Controller
         $arr = array();
         if ($query->count() > 0) {
             foreach ($query as $key => $row) {
-                $route = url('pbb/tunggakan/sub_tunggakan_wilayah') . "/" . $row->kelurahan;
+                $route = url('pbb/cluster-tunggakan/sub_tunggakan_wilayah') . "/" . $row->kelurahan;
                 $rowetail_kelurahan = "<a target='_BLANK' href='" . $route . "' ><u>" . $row->kelurahan . "</u> <i class='fa fa-arrow-circle-o-right'></i></a>";
 
                 $arr[] = [
@@ -704,5 +704,66 @@ class ClusterTunggakanController extends Controller
         }
 
         return response()->json($arr);
+    }
+
+    // detail
+    public function sub_tunggakan_wilayah($kelurahan)
+    {
+        // dd($kelurahan);
+        $kelurahan = $kelurahan;
+        return view("admin.pbb.sub_tunggakan_wilayah")->with(compact('kelurahan'));
+    }
+
+    public function datatable_sub_tunggakan_wilayah(Request $request)
+    {
+        $kelurahan = $request->kelurahan;
+        $query = DB::connection("pgsql_pbb")->table('data.detail_tunggakan_pbb AS a')
+            ->join("data.objek_pajak as b", "b.nop", "=", "a.nop", "left")
+            ->selectRaw("
+                    a.tahun_sppt,
+                    a.pbb_terutang,
+                    a.nominal_denda,
+                    a.nominal_tunggakan,
+                    b.npwp,
+                    a.kecamatan,
+                    a.kelurahan,
+                    b.alamat_objek_pajak,
+                    b.nama_subjek_pajak,
+                    a.nop
+            ");
+
+        if (!is_null($kelurahan)) {
+            if (is_array($kelurahan)) {
+                $query->whereIn('a.kelurahan', $kelurahan);
+            } else {
+                $query->where('a.kelurahan', $kelurahan);
+            }
+        }
+        $query->orderBy('a.tahun_sppt', 'DESC');
+
+        $results = $query->get();
+        // dd($results);
+        $arr = array();
+        // if($tinggi->count() > 0){
+        foreach ($results as $key => $d) {
+            $arr[] = array(
+                "no" => $key + 1,
+                "npwp" => $d->npwp,
+                "nop" => $d->nop,
+                "nama_subjek_pajak" => $d->nama_subjek_pajak,
+                "alamat_objek_pajak" => $d->alamat_objek_pajak,
+                "kecamatan" => $d->kecamatan,
+                "kelurahan" => $d->kelurahan,
+                "tahun_sppt" => $d->tahun_sppt,
+                "nominal_tunggakan" => rupiahFormat($d->nominal_tunggakan),
+                "nominal_denda" => rupiahFormat($d->nominal_denda),
+                "pbb_terutang" => rupiahFormat($d->pbb_terutang),
+            );
+        }
+        // }
+        // dd($arr);
+        return Datatables::of($arr)
+            ->rawColumns(['pembayaran'])
+            ->make(true);
     }
 }
