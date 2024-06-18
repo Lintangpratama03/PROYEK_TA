@@ -135,13 +135,13 @@ class ClusterTunggakanController extends Controller
         $view = '( SELECT 
             kecamatan,
             kelurahan,
-            total_nominal_tunggakan,
+            total_jumlah_tunggakan,
             total_jumlah_nop
         FROM data.v_tunggakan_level_daerah
         GROUP BY 
             kecamatan,
             kelurahan,
-            total_nominal_tunggakan,
+            total_jumlah_tunggakan,
             total_jumlah_nop
         ORDER BY kecamatan DESC) AS a';
 
@@ -150,7 +150,7 @@ class ClusterTunggakanController extends Controller
             ->selectRaw("
                     a.kecamatan,
                     a.kelurahan,
-                    a.total_nominal_tunggakan,
+                    a.total_jumlah_tunggakan,
                     a.total_jumlah_nop
                 ");
         if (!is_null($kecamatan)) {
@@ -174,7 +174,7 @@ class ClusterTunggakanController extends Controller
                     'kecamatan' => $row->kecamatan,
                     'kelurahan' => $rowetail_kelurahan,
                     'jumlah' => number_format($row->total_jumlah_nop),
-                    'nominal' => number_format($row->total_nominal_tunggakan)
+                    'jumlah_tunggakan' => number_format($row->total_jumlah_tunggakan)
                 ];
             }
         }

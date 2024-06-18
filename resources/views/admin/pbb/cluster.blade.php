@@ -94,122 +94,31 @@
         </div>
 
         <div class="row">
-            <div class="col-xl-12 col-md-6 col-lg-3">
+            <div class="col-xl-8 col-md-6 col-lg-3">
                 <div class="col-xl-12">
                     <div class="card o-hidden">
                         <div class="card-header pb-0">
                             <div class="row">
                                 <div class="col-xl-5">
-                                    <h6>Grafik Clustering</h6>
+                                    <h6>Grafik Tunggakan (Wilayah)</h6>
                                 </div>
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-xl-8">
+                            <div class="col-xl-12">
                                 <div class="card-body">
                                     <canvas id="clusterChart"></canvas>
                                 </div>
                             </div>
-                            <div class="col-xl-4">
-                                <div class="mt-4">
-                                    <h6>Keterangan:</h6>
-                                    {{-- <ul>
-                                        <ul>
-                                            <li><span class="color-box green">Hijau:</span> Cluster dengan prioritas
-                                                penagihan rendah.</li><br>
-                                            <li><span class="color-box yellow">Kuning:</span> Cluster dengan prioritas
-                                                penagihan sedang.</li><br>
-                                            <li><span class="color-box red">Merah:</span> Cluster dengan prioritas penagihan
-                                                tinggi.</li>
-                                        </ul>
-                                        <style>
-                                            .color-box {
-                                                display: inline-block;
-                                                padding: 2px;
-                                                font-weight: bold;
-                                            }
-
-                                            .yellow {
-                                                background-color: #FFFF00;
-                                                color: black;
-                                            }
-
-                                            .green {
-                                                background-color: #00FF00;
-                                                color: black;
-                                            }
-
-                                            .orange {
-                                                background-color: #fd9a29;
-                                                color: black;
-                                            }
-
-                                            .red {
-                                                background-color: #FF0000;
-                                                color: white;
-                                            }
-                                        </style>
-                                    </ul> --}}
-                                </div>
-                            </div>
                         </div>
-                        {{-- <div class="row">
-                            <div class="col-xl-8">
-                                <div class="card-body">
-                                    <canvas id="clusterChart1"></canvas>
-                                </div>
-                            </div>
-                            <div class="col-xl-4">
-                                <div class="mt-4">
-                                    <h6>Keterangan:</h6>
-                                    <ul>
-                                        <ul>
-                                            <li><span class="color-box green">Hijau:</span> Cluster dengan prioritas
-                                                penagihan rendah.</li><br>
-                                            <li><span class="color-box yellow">Kuning:</span> Cluster dengan prioritas
-                                                penagihan sedang.</li><br>
-                                            <li><span class="color-box red">Merah:</span> Cluster dengan prioritas penagihan
-                                                tinggi.</li>
-                                        </ul>
-                                        <style>
-                                            .color-box {
-                                                display: inline-block;
-                                                padding: 2px;
-                                                font-weight: bold;
-                                            }
-
-                                            .yellow {
-                                                background-color: #FFFF00;
-                                                color: black;
-                                            }
-
-                                            .green {
-                                                background-color: #00FF00;
-                                                color: black;
-                                            }
-
-                                            .orange {
-                                                background-color: #fd9a29;
-                                                color: black;
-                                            }
-
-                                            .red {
-                                                background-color: #FF0000;
-                                                color: white;
-                                            }
-                                        </style>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div> --}}
                     </div>
                 </div>
             </div>
-            <div class="col-xl-4 d-none">
+            <div class="col-xl-4">
                 <div>
                     <div class="card o-hidden">
                         <div class="card-header pb-0">
-                            <h6>Data Cluster Tunggakan (Wilayah)</h6>
+                            <h6>Total Tunggakan (Wilayah)</h6>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -219,7 +128,7 @@
                                             <th>Kecamatan</th>
                                             <th>Kelurahan</th>
                                             <th>Jumlah NOP</th>
-                                            <th>Nominal Tunggakan</th>
+                                            <th>Jumlah Tunggakan</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -228,60 +137,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="row">
-
-            <div class="col-xl-12 d-none">
-                <div class="card o-hidden">
-                    <div class="card-header pb-0">
-                        <h6>Cluster Tunggakan (Wilayah)</h6>
-                        <div class="row">
-                            <div class="col-xl-12">
-                                <div class="row">
-                                    <div class="col-xl-3 mb-2 col-md-4 col-sm-6">
-                                        <select name="kecamatan" id="kecamatan"
-                                            class="form-control btn-square js-example-basic-single col-sm-12 "
-                                            style="border: 1px solid #808080;border-radius:5px;">
-                                            <option value="" class = "d-flex align-items-center">Pilih Cluster
-                                            </option>
-                                            <option value="Hijau" class = "d-flex align-items-center">Hijau
-                                            </option>
-                                            <option value="Kuning" class = "d-flex align-items-center">Kuning
-                                            </option>
-                                            <option value="Orange" class = "d-flex align-items-center">Orange
-                                            </option>
-                                            <option value="Merah" class = "d-flex align-items-center">Merah
-                                            </option>
-                                        </select>
-                                    </div>
-                                    <div class="col-xl-2 mb-2 col-md-4 col-sm-6">
-                                        <a class="btn btn-primary btn-square" type="button"
-                                            onclick="filterCluster()">Terapkan<span class="caret"></span></a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-cluster-hasil">
-                                <thead>
-                                    <tr>
-                                        <th style="text-align: center;background-color:#cecece">CLUSTER</th>
-                                        <th style="text-align: center;">Kecamatan</th>
-                                        <th style="text-align: center;">Kelurahan</th>
-                                        <th style="text-align: center;">Jumlah NOP</th>
-                                        <th style="text-align: center;">Jumlah Tunggakan</th>
-                                        <th style="text-align: center;">Nominal Tunggakan</th>
-                                        <th style="text-align: center;">Rekomendasi</th>
-                                    </tr>
-                                </thead>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
     </div>
@@ -376,7 +231,7 @@
                 $(".table-tunggakan-wilayah-cluster").DataTable().destroy();
                 $(".table-cluster-hasil").DataTable().destroy();
                 table_tunggakan_wilayah(kecamatan, kelurahan);
-                // table_tunggakan_wilayah_cluster(kecamatan, kelurahan);
+                table_tunggakan_wilayah_cluster(kecamatan, kelurahan);
                 // table_tunggakan_cluster_hasil(kecamatan, kelurahan);
                 // loadClusterChart(kecamatan, kelurahan);
                 // loadClusterChart1(kecamatan, kelurahan);
@@ -509,88 +364,9 @@
                         name: 'jumlah'
                     },
                     {
-                        data: 'nominal',
-                        name: 'nominal'
+                        data: 'jumlah_tunggakan',
+                        name: 'jumlah_tunggakan'
                     },
-                ],
-
-                order: [
-                    [0, 'desc']
-                ],
-                lengthMenu: [5, 10, 15, 25],
-                pageLength: 5
-            });
-        }
-
-        function table_tunggakan_cluster_hasil(kecamatan = curKecamatan, kelurahan = curKelurahan) {
-
-            var table = $(".table-cluster-hasil").DataTable({
-                dom: "<'row'<'col-sm-12 col-md-3'l><'col-sm-12 col-md-6 text-center'B><'col-sm-12 col-md-3'>>" +
-                    // dengan Button
-                    "<'row'<'col-sm-12'tr>>" + // Add table
-                    "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-                buttons: [{
-                    "extend": 'excel',
-                    "text": '<i class="fa fa-file-excel-o" style="color: white;"> Export Excel</i>',
-                    "titleAttr": 'Export to Excel',
-                    "filename": 'Tunggakan (Wilayah) PBB ',
-                    "action": newexportaction
-                }, ],
-                processing: true,
-                serverSide: true,
-                responsive: true,
-                searchDelay: 2000,
-                ajax: {
-                    url: '{{ route('pbb.cluster.datatable_tunggakan_cluster_hasil') }}',
-                    type: 'GET',
-                    data: {
-                        "kecamatan": kecamatan,
-                        "kelurahan": kelurahan
-                    }
-                },
-                columns: [{
-                        data: 'cluster',
-                        name: 'cluster'
-                    },
-                    {
-                        data: 'kecamatan',
-                        name: 'kecamatan'
-                    },
-                    {
-                        data: 'kelurahan',
-                        name: 'kelurahan'
-                    },
-                    {
-                        data: 'total_jumlah_nop',
-                        name: 'total_jumlah_nop'
-                    },
-                    {
-                        data: 'total_jumlah_tunggakan',
-                        name: 'total_jumlah_tunggakan'
-                    },
-                    {
-                        data: 'total_nominal_tunggakan',
-                        name: 'total_nominal_tunggakan'
-                    },
-                    {
-                        data: 'rekomendasi',
-                        name: 'rekomendasi',
-                        render: function(data, type, row) {
-                            let rekomendasi = '';
-                            switch (row.cluster) {
-                                case '1':
-                                    rekomendasi = 'Prioritas penagihan rendah';
-                                    break;
-                                case '2':
-                                    rekomendasi = 'Prioritas penagihan sedang';
-                                    break;
-                                case '3':
-                                    rekomendasi = 'Prioritas penagihan tinggi';
-                                    break;
-                            }
-                            return rekomendasi;
-                        }
-                    }
                 ],
 
                 order: [
@@ -605,8 +381,7 @@
         $(document).ready(function() {
             filterKel();
             table_tunggakan_wilayah();
-            // table_tunggakan_wilayah_cluster();
-            // table_tunggakan_cluster_hasil();
+            table_tunggakan_wilayah_cluster();
             // loadClusterChart();
             // loadClusterChart1();
             loadClusterChartNop();
@@ -891,9 +666,8 @@
                                             if (label) {
                                                 label += ': ';
                                             }
-                                            label += '(nop ringan :' + context.raw.a +
-                                                ',nop sedang : ' + context.raw.b +
-                                                ',nop berat : ' + context.raw.c +
+                                            label += '(jumlah tunggakan :' + context.raw.x +
+                                                ',total nop : ' + context.raw.y +
                                                 ')';
                                             return label;
                                         }

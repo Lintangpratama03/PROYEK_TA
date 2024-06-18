@@ -23,29 +23,28 @@
         <div class="row">
             <div class="col-xl-3">
                 <div class="mb-2">
-                    <!-- <label class="col-form-label">Pilih Tahun</label> -->
-                    <select id="tahun" name="tahun[]" class="col-sm-12" multiple="multiple">
-                        <optgroup label="Tahun">
-                            @foreach (array_combine(range(date('Y'), 2018), range(date('Y'), 2018)) as $year)
-                                <option value="{{ $year }}">{{ $year }}</option>
-                            @endforeach
-                        </optgroup>
+                    <label for="start-year">Pilih Tahun Mulai</label>
+                    <select id="start-year" name="start-year" class="form-control">
+                        <option value="">Pilih Tahun</option>
+                        @foreach (range(date('Y') - 10, date('Y')) as $year)
+                            <option value="{{ $year }}">{{ $year }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
             <div class="col-xl-3">
                 <div class="mb-2">
-                    <!-- <label class="col-form-label">Pilih Bulan</label> -->
-                    <select id="bulan" name="bulan[]" class="col-sm-12" multiple="multiple">
-                        <optgroup label="Bulan">
-                            @foreach (getMonthList() as $index => $value)
-                                <option value="{{ $index }}">{{ $value }}</option>
-                            @endforeach
-                        </optgroup>
+                    <label for="end-year">Pilih Tahun Akhir</label>
+                    <select id="end-year" name="end-year" class="form-control">
+                        <option value="{{ date('Y') }}">Pilih Tahun</option>
+                        @foreach (range(date('Y'), 2010) as $year)
+                            <option value="{{ $year }}">{{ $year }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
             <div class="col-xl-3">
+                <label for="start-year">Kecamatan</label>
                 <select name="kecamatan" id="kecamatan" class="form-control btn-square js-example-basic-single col-sm-12"
                     style="border: 1px solid #808080;">
                     <option value="">Pilih Kecamatan</option>
@@ -55,13 +54,14 @@
                 </select>
             </div>
             <div class="col-xl-3">
+                <label for="start-year">Kelurahan</label>
                 <select name="kelurahan" id="kelurahan"class="form-control btn-square js-example-basic-single col-sm-12"
                     style="border: 1px solid #808080;">
                     <option value="" class = "d-flex align-items-center">Pilih Kelurahan</option>
                 </select>
             </div>
             <div class="col-xl-2">
-                <a class='btn btn-primary btn-sm' onclick='filterGrafikBulanAkumulasi()'><i class='fa fa-search'></i>
+                <a class='btn btn-primary btn-sm' onclick='filterGrafik()'><i class='fa fa-search'></i>
                     Tampilkan</a>
             </div>
 
@@ -69,7 +69,7 @@
                 <div class="col-xl-12">
                     <div class="card o-hidden">
                         <div class="card-header pb-0">
-                            <h6>Tunggakan PBB per Bulan</h6>
+                            <h6>Grafik Tunggakan PBB Per Tahun</h6>
                         </div>
                         <div class="bar-chart-widget">
                             <div class="bottom-content card-body">
@@ -92,7 +92,6 @@
     <script>
         const day = new Date();
         var currentYear = day.getFullYear();
-        var currentMonth = day.getMonth() + 1;
         var curKelurahan = $('#kelurahan').val();
         var curKecamatan = $('#kecamatan').val();
 
@@ -109,14 +108,13 @@
                     },
                     dataType: 'json',
                     success: function(result) {
-                        //console.log(result);
                         $('#kelurahan').append(
                             '<option value="" "class = "d-flex align-items-center">Pilih Kelurahan</option>'
                         );
                         $.each(result, function(key, value) {
-                            $("#kelurahan").append('<option value="' + value
-                                .kelurahan + '"class = "d-flex align-items-center">' + value
-                                .kelurahan + '</option>');
+                            $("#kelurahan").append('<option value="' + value.kelurahan +
+                                '" class="d-flex align-items-center">' + value.kelurahan +
+                                '</option>');
                         });
                     }
                 });
@@ -144,155 +142,119 @@
             } else if (angka >= 1000000) {
                 return isMin + 'Rp. ' + (angka / 1000000).toFixed(2) + ' Juta';
             } else if (angka >= 100000 || angka >= 10000 || angka >= 1000) {
-                return isMin + 'Rp. ' + angka
+                return isMin + 'Rp. ' + angka;
             } else {
-                return 'Rp. 0'
+                return 'Rp. 0';
             }
         }
 
+        var chart = null; // Declare the chart variable outside the function scope
 
-        function get_tunggakan_perbulan(tahun = [], bulan = [], kecamatan = curKecamatan,
-            kelurahan = curKelurahan) {
-            console.log(kecamatan);
-            let url_submit = "{{ route('dashboard.tunggakan.tunggakan_perbulan') }}";
+        function get_tunggakan_pertahun(startYear, endYear, kecamatan = curKecamatan, kelurahan = curKelurahan) {
+            let url_submit = "{{ route('dashboard.tunggakan.tunggakan_pertahun') }}";
             $.ajax({
                 type: 'GET',
                 url: url_submit,
                 data: {
-                    "tahun": tahun,
-                    "bulan": bulan,
+                    "start_year": startYear,
+                    "end_year": endYear,
                     "kecamatan": kecamatan,
                     "kelurahan": kelurahan,
                 },
-                cache: false,
-                contentType: false,
-                processData: true,
                 success: function(data) {
-                    bulan = data.bulan;
-                    tunggakan = data.tunggakan;
-                    chart_tunggakan_perbulan(tunggakan, bulan);
+                    let years = Object.keys(data.tunggakan);
+                    let tunggakanData = years.map(year => data.tunggakan[year]);
+                    chart_tunggakan_pertahun(tunggakanData, years);
                 },
-
                 error: function(data) {
-                    return 0;
                     alert('Terjadi Kesalahan Pada Server');
                 },
-
             });
         }
 
-        function chart_tunggakan_perbulan(tunggakan, bulan) {
-            // console.log("tunggakan function",tunggakan);
-            var kelurahan = $('#kelurahan').val();
-            var kecamatan = $('#kecamatan').val();
-            let arrSeries = []
-            $.each(tunggakan, function(index, value) {
-                let object = {
-                    name: index,
-                    data: value
-                }
-                arrSeries.push(object)
-            })
+        function chart_tunggakan_pertahun(tunggakan, tahun) {
+            var kelurahan = $('#kelurahan').val() || 'all';
+            var kecamatan = $('#kecamatan').val() || 'all';
+
+            let seriesData = [{
+                name: 'Total Tunggakan',
+                data: tunggakan
+            }];
 
             var options = {
-                series: arrSeries,
+                series: seriesData,
                 chart: {
-                    type: 'bar',
+                    type: 'line',
                     height: 360,
                     events: {
-                        dataPointSelection: function(event, chartContext, config) {
-                            var tahun = chartContext.w.config.series[config.seriesIndex].name;
-                            var bulan = config.dataPointIndex + 1;
-                            //console.log(tahun, bulan);
-
-                            window.location.href = '{{ url('dashboard/tunggakan/detail_tunggakan_perbulan') }}' +
-                                '/' + tahun + '/' + bulan + '/' + kecamatan + '/' + kelurahan;
+                        markerClick: function(event, chartContext, {
+                            dataPointIndex
+                        }) {
+                            var selectedYear = tahun[dataPointIndex];
+                            var selectedKecamatan = kecamatan !== 'all' ? kecamatan : '';
+                            var selectedKelurahan = kelurahan !== 'all' ? kelurahan : '';
+                            var detailUrl = '{{ url('dashboard/tunggakan/detail_tunggakan_pertahun') }}' +
+                                '/' + selectedYear + '/' + selectedKecamatan + '/' + selectedKelurahan;
+                            window.location.href = detailUrl;
                         }
                     }
                 },
-                plotOptions: {
-                    bar: {
-                        horizontal: false,
-                        columnWidth: '70%',
-                        endingShape: 'rounded'
-                    },
-                },
-                dataLabels: {
-                    enabled: false
-                },
                 stroke: {
-                    show: true,
+                    curve: 'smooth',
                     width: 2,
-                    colors: ['transparent']
                 },
                 xaxis: {
-                    categories: bulan,
+                    categories: tahun,
+                    title: {
+                        text: 'Tahun'
+                    }
                 },
                 yaxis: {
-                    show: true,
                     title: {
                         text: 'Jumlah Tunggakan'
                     },
                     labels: {
                         formatter: function(val) {
-                            return (val) + " "
+                            return val;
                         }
                     }
                 },
-
-                fill: {
-                    opacity: 1,
-                    colors: ['#f44336', '#ff9800', '#4caf50', '#00bcd4'],
-                    type: 'gradient',
-                    gradient: {
-                        shade: 'light',
-                        type: 'vertical',
-                        shadeIntensity: 0.4,
-                        inverseColors: false,
-                        opacityFrom: 0.9,
-                        opacityTo: 0.8,
-                        stops: [0, 100]
-                    }
-                },
-                colors: ['#f44336', '#ff9800', '#4caf50', '#00bcd4'],
                 tooltip: {
                     y: {
                         formatter: function(val) {
-                            return (val) + " Tunggakan"
+                            return val;
                         }
                     }
                 }
             };
 
-            var chartlinechart4 = new ApexCharts(document.querySelector("#chart-line"), options);
-            chartlinechart4.render();
-            chartlinechart4.updateOptions(options);
+            if (chart) {
+                chart.destroy(); // Destroy the existing chart if it exists
+            }
+
+            chart = new ApexCharts(document.querySelector("#chart-line"), options);
+            chart.render();
         }
 
-
-
-        var table;
-
-        function filterGrafikBulanAkumulasi() {
-            let tahun = $('#tahun').val();
-            let bulan = $('#bulan').val();
+        function filterGrafik() {
+            let startYear = $('#start-year').val();
+            let endYear = $('#end-year').val();
             let kecamatan = $('#kecamatan').val();
             let kelurahan = $('#kelurahan').val();
-            get_tunggakan_perbulan(tahun, bulan, kecamatan, kelurahan);
+            get_tunggakan_pertahun(startYear, endYear, kecamatan, kelurahan);
         }
 
         $(document).ready(function() {
-            filterWilayah()
-            $("#tahun").select2({
-                placeholder: "Pilih Tahun (Bisa Multi Tahun)"
+            filterWilayah();
+
+            // Initialize the year selects
+            $("#start-year, #end-year").select2({
+                placeholder: "Pilih Tahun"
             });
 
-            $("#bulan").select2({
-                placeholder: "Pilih Bulan (Bisa Multi Bulan)"
-            });
-            let tahun = $('#tahun').val();
-            let bulan = $('#bulan').val()
-            get_tunggakan_perbulan();
-        })
+            // Load the data for the initial range
+            let currentYear = new Date().getFullYear();
+            get_tunggakan_pertahun(currentYear - 9, currentYear);
+        });
     </script>
 @endsection

@@ -1,5 +1,5 @@
 @extends('admin.layout.main')
-@section('title', 'Detail Tunggakan Bulanan PBB - Smart Dashboard')
+@section('title', 'Detail Tunggakan Tahunan PBB - Smart Dashboard')
 
 @section('content')
     {{-- <style>
@@ -11,11 +11,11 @@
         <div class="page-header">
             <div class="row">
                 <div class="col-sm-6">
-                    <h3>Penerimaan PDL</h3>
+                    <h3>Tunggakan PBB</h3>
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="#">PDL</a></li>
-                        <li class="breadcrumb-item active">Penerimaan</li>
-                        <li class="breadcrumb-item active">Detail penerimaan Berdasarkan Tunggakan Bulanan PBB</li>
+                        <li class="breadcrumb-item"><a href="#">PBB</a></li>
+                        <li class="breadcrumb-item active">Tunggakan</li>
+                        <li class="breadcrumb-item active">Detail Tunggakan Tahunan PBB</li>
                     </ol>
                 </div>
                 <div class="col-sm-6">
@@ -32,23 +32,24 @@
                 <div class="col-xl-12">
                     <div class="card o-hidden">
                         <div class="card-header pb-0">
-                            <h6>Detail Penerimaan Berdasarkan Tunggakan Bulanan PBB </h6>
+                            <h6>Detail Tunggakan tahunan PBB </h6>
                             <h6></h6>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-detail-penerimaan-bulanan">
+                                <table class="table table-detail-tunggakan-tahunan">
                                     <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>NPWD</th>
-                                            <th>Nama Objek Pajak</th>
+                                            <th>NPWP</th>
+                                            <th>NOP</th>
                                             <th>Nama Wajib Pajak</th>
                                             <th>Alamat Objek Pajak</th>
-                                            <th>Alamat Wajib Pajak</th>
-                                            <th>Tahun SPT</th>
-                                            <th>Bulan SPT</th>
-                                            <th>Nominal</th>
+                                            <th>Kecamatan</th>
+                                            <th>Kelurahan</th>
+                                            <th>PBB Terutang</th>
+                                            <th>Denda</th>
+                                            <th>Nominal Terutang</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -123,18 +124,17 @@
             dt.ajax.reload();
         };
 
-        function table_detail_penerimaan_bulanan() {
+        function table_detail_tunggakan_tahunan() {
             let tahun = "{{ $tahun }}";
-            let bulan = "{{ $bulan }}";
             let kecamatan = "{{ $kecamatan }}";
             let kelurahan = "{{ $kelurahan }}";
-            var table = $(".table-detail-penerimaan-bulanan").DataTable({
+            var table = $(".table-detail-tunggakan-tahunan").DataTable({
                 "dom": 'Blfrtip',
                 buttons: [{
                     "extend": 'excel',
                     "text": '<i class="fa fa-file-excel-o" style="color: white;"> Export Excel</i>',
                     "titleAttr": 'Excel',
-                    "filename": 'Detail Tunggakan Bulanan PBB',
+                    "filename": 'Detail Tunggakan Tahunan PBB',
                     "action": newexportaction
                 }, ],
                 processing: true,
@@ -142,11 +142,10 @@
                 responsive: true,
                 searchDelay: 2000,
                 ajax: {
-                    url: '{{ route('dashboard.tunggakan.datatable_detail_penerimaan_perbulan') }}',
+                    url: '{{ route('dashboard.tunggakan.datatable_detail_tunggakan_pertahun') }}',
                     type: 'GET',
                     data: {
                         "tahun": tahun,
-                        "bulan": bulan,
                         "kecamatan": kecamatan,
                         "kelurahan": kelurahan,
                     }
@@ -161,36 +160,40 @@
                         }
                     },
                     {
-                        data: 'npwd',
-                        name: 'npwd'
+                        data: 'npwp',
+                        name: 'npwp'
                     },
                     {
-                        data: 'nama_op',
-                        name: 'nama_op'
+                        data: 'nop',
+                        name: 'nop'
                     },
                     {
-                        data: 'nama_wp',
-                        name: 'nama_wp'
+                        data: 'nama_subjek_pajak',
+                        name: 'nama_subjek_pajak'
                     },
                     {
-                        data: 'alamat_op',
-                        name: 'alamat_op'
+                        data: 'alamat_objek_pajak',
+                        name: 'alamat_objek_pajak'
                     },
                     {
-                        data: 'alamat_wp',
-                        name: 'alamat_wp'
+                        data: 'kecamatan',
+                        name: 'kecamatan'
                     },
                     {
-                        data: 'masa_pajak_tahun',
-                        name: 'masa_pajak_tahun'
+                        data: 'kelurahan',
+                        name: 'kelurahan'
                     },
                     {
-                        data: 'masa_pajak_bulan',
-                        name: 'masa_pajak_bulan'
+                        data: 'pbb_terutang',
+                        name: 'pbb_terutang'
                     },
                     {
-                        data: 'nominal',
-                        name: 'nominal'
+                        data: 'nominal_denda',
+                        name: 'nominal_denda'
+                    },
+                    {
+                        data: 'nominal_tunggakan',
+                        name: 'nominal_tunggakan'
                     },
                 ],
                 order: [
@@ -199,21 +202,15 @@
             });
         }
         document.addEventListener("DOMContentLoaded", function() {
-            var bulan_array = [
-                "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September",
-                "Oktober", "November", "Desember"
-            ];
-
-            var status = "{{ $bulan }}";
-            var bulan = bulan_array[parseInt(status) - 1];
-            document.querySelector('.card-header h6:nth-child(2)').textContent = "Bulan Pajak : " + bulan;
+            var tahun = "{{ $tahun }}";
+            document.querySelector('.card-header h6:nth-child(2)').textContent = "Tahun SPPT Pajak : " + tahun;
         });
 
 
 
         $(document).ready(function() {
 
-            table_detail_penerimaan_bulanan();
+            table_detail_tunggakan_tahunan();
         })
     </script>
 @endsection
