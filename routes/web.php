@@ -159,19 +159,21 @@ Route::middleware($middleware_auth)->group(function () {
 
                 Route::get('detail_pembayaran_tunggakan_wp/{tahun_sppt}/{tahun_bayar}/{kecematan}/{kelurahan}', 'PBB\TunggakanController@detail_pembayaran_tunggakan_wp')->name('detail_pembayaran_tunggakan_wp');
                 Route::get('datatable_pembayaran_tunggakan_wp', 'PBB\TunggakanController@datatable_pembayaran_tunggakan_wp')->name('datatable_pembayaran_tunggakan_wp');
-            });
-            Route::prefix('cluster-tunggakan')->name('cluster.')->group(function () {
-                Route::get('/', 'PBB\ClusterTunggakanController@index')->name('index');
-                Route::get('/get_wilayah', 'PBB\ClusterTunggakanController@get_wilayah')->name('get_wilayah');
-                Route::get('/datatable_tunggakan_wilayah', 'PBB\ClusterTunggakanController@datatable_tunggakan_wilayah')->name('datatable_tunggakan_wilayah');
-                Route::get('/datatable_tunggakan_wilayah_cluster', 'PBB\ClusterTunggakanController@datatable_tunggakan_wilayah_cluster')->name('datatable_tunggakan_wilayah_cluster');
-                Route::get('/data_tunggakan_wilayah_cluster', 'PBB\ClusterTunggakanController@data_tunggakan_wilayah_cluster')->name('data_tunggakan_wilayah_cluster');
-                Route::get('/data_tunggakan_wilayah_cluster_1', 'PBB\ClusterTunggakanController@data_tunggakan_wilayah_cluster_1')->name('data_tunggakan_wilayah_cluster_1');
-                Route::get('/data_tunggakan_wilayah_cluster_nop', 'PBB\ClusterTunggakanController@data_tunggakan_wilayah_cluster_nop')->name('data_tunggakan_wilayah_cluster_nop');
-                Route::get('/datatable_tunggakan_cluster_hasil', 'PBB\ClusterTunggakanController@datatable_tunggakan_cluster_hasil')->name('datatable_tunggakan_cluster_hasil');
 
-                Route::get('sub_tunggakan_wilayah/{kelurahan}', 'PBB\ClusterTunggakanController@sub_tunggakan_wilayah')->name('sub_tunggakan_wilayah');
-                Route::get('datatable_sub_tunggakan_wilayah', 'PBB\ClusterTunggakanController@datatable_sub_tunggakan_wilayah')->name('datatable_sub_tunggakan_wilayah');
+                Route::get('/data_tunggakan_wilayah_cluster_nop', 'PBB\TunggakanController@data_tunggakan_wilayah_cluster_nop')->name('data_tunggakan_wilayah_cluster_nop');
+            });
+            Route::prefix('wilayah-tunggakan')->name('cluster.')->group(function () {
+                Route::get('/', 'PBB\WilayahTunggakanController@index')->name('index');
+                Route::get('/get_wilayah', 'PBB\WilayahTunggakanController@get_wilayah')->name('get_wilayah');
+                Route::get('/datatable_tunggakan_wilayah', 'PBB\WilayahTunggakanController@datatable_tunggakan_wilayah')->name('datatable_tunggakan_wilayah');
+                Route::get('/datatable_tunggakan_wilayah_cluster', 'PBB\WilayahTunggakanController@datatable_tunggakan_wilayah_cluster')->name('datatable_tunggakan_wilayah_cluster');
+                Route::get('/data_tunggakan_wilayah_cluster', 'PBB\WilayahTunggakanController@data_tunggakan_wilayah_cluster')->name('data_tunggakan_wilayah_cluster');
+                Route::get('/data_tunggakan_wilayah_cluster_1', 'PBB\WilayahTunggakanController@data_tunggakan_wilayah_cluster_1')->name('data_tunggakan_wilayah_cluster_1');
+                Route::get('/data_tunggakan_wilayah_cluster_nop', 'PBB\WilayahTunggakanController@data_tunggakan_wilayah_cluster_nop')->name('data_tunggakan_wilayah_cluster_nop');
+                Route::get('/datatable_tunggakan_cluster_hasil', 'PBB\WilayahTunggakanController@datatable_tunggakan_cluster_hasil')->name('datatable_tunggakan_cluster_hasil');
+
+                Route::get('sub_tunggakan_wilayah/{kelurahan}', 'PBB\WilayahTunggakanController@sub_tunggakan_wilayah')->name('sub_tunggakan_wilayah');
+                Route::get('datatable_sub_tunggakan_wilayah', 'PBB\WilayahTunggakanController@datatable_sub_tunggakan_wilayah')->name('datatable_sub_tunggakan_wilayah');
             });
             Route::prefix('peta-tunggakan')->name('peta-tunggakan.')->group(function () {
                 Route::get('/', 'PBB\PetaTunggakanController@index')->name('index');

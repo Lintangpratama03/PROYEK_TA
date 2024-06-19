@@ -10,6 +10,7 @@ use Yajra\Datatables\Datatables;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Phpml\Clustering\KMeans;
 
 class TunggakanController extends Controller
 {
@@ -102,7 +103,64 @@ class TunggakanController extends Controller
             ->rawColumns(['nop'])
             ->make(true);
     }
+    public function data_tunggakan_wilayah_cluster_nop(Request $request)
+    {
+        // dd($request->all());
+        $kecamatan = $request->kecamatan;
+        $kelurahan = $request->kelurahan;
 
+        $query = DB::connection("pgsql_pbb")
+            ->table("data.v_tunggakan_level_nop as t")
+            ->join("objek_pajak as op", "t.nop", "=", "op.nop")
+            ->selectRaw("
+                    op.kecamatan,
+                    op.kelurahan,
+                    t.nop,
+                    t.nominal_tunggakan,
+                    t.jumlah_tunggakan
+        ");
+
+        if (!is_null($kecamatan)) {
+            $query->where('op.kecamatan', $kecamatan);
+        }
+
+        if (!is_null($kelurahan)) {
+            $query->where('op.kelurahan', $kelurahan);
+        }
+
+        $query = $query->get();
+
+        // dd($query);
+        $data = $query->map(function ($row) {
+            return [
+                $row->nominal_tunggakan,
+                $row->jumlah_tunggakan,
+            ];
+        })->toArray();
+        // dd($data);
+        $kmeans = new KMeans(3, KMeans::INIT_KMEANS_PLUS_PLUS);
+        $clusters = $kmeans->cluster($data);
+        // dd($clusters);
+        $arr = [];
+
+        foreach ($clusters as $i => $cluster) {
+            foreach ($cluster as $point) {
+                $index = array_search($point, $data);
+                $row = $query[$index];
+
+                $arr[] = [
+                    'kecamatan' => $row->kecamatan,
+                    'kelurahan' => $row->kelurahan,
+                    'nop' => $row->nop,
+                    'total_jumlah_tunggakan' => $row->jumlah_tunggakan,
+                    'total_nominal_tunggakan' => $row->nominal_tunggakan,
+                    'cluster' => $i
+                ];
+            }
+        }
+
+        return response()->json($arr);
+    }
     public function datatable_tunggakan_level(Request $request)
     {
         // dd($request->all());

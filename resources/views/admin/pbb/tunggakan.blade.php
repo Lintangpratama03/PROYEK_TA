@@ -1,6 +1,10 @@
 @extends('admin.layout.main')
 @section('title', 'Tunggakan PBB - Smart Dashboard')
-
+<style>
+    .text-right {
+        text-align: right;
+    }
+</style>
 @section('content')
     <div class="container-fluid">
         <div class="page-header">
@@ -71,19 +75,17 @@
                                     <tr>
                                         <th rowspan="2" style="text-align: center; vertical-align: middle;">Tahun SPPT
                                         </th>
-                                        <th colspan="4" style="text-align: center;background-color:#f3e8ae">
+                                        <th colspan="5" style="text-align: center;background-color:#f3e8ae">
                                             IDENTITAS</th>
-                                        <th colspan="3" style="text-align: center;background-color:#cecece">
+                                        <th colspan="1" style="text-align: center;background-color:#cecece">
                                             NOMINAL</th>
-
                                     </tr>
                                     <tr>
                                         <th>NOP</th>
                                         <th>Nama</th>
+                                        <th>Alamat</th>
                                         <th>Kecamatan</th>
                                         <th>Kelurahan</th>
-                                        <th>PBB Terhutang</th>
-                                        <th>Denda</th>
                                         <th>Total Tunggakan PBB</th>
                                     </tr>
                                 </thead>
@@ -97,14 +99,61 @@
 
         <div class="row">
             <div class="col-xl-8 col-md-6 col-lg-3">
+
+                <div class="col-xl-12">
+                    <div class="card o-hidden">
+                        <div class="card-header pb-0">
+                            <h6>Grafik Tunggakan</h6>
+                            <div class="row">
+                                <div class="col-xl-12">
+                                    <div class="row">
+                                        <div class="col-xl-3 mb-2 col-md-4 col-sm-6">
+                                            <select name="kecamatan_cluster" id="kecamatan_cluster"
+                                                class="form-control btn-square js-example-basic-single col-sm-12 "
+                                                style="border: 1px solid #808080;border-radius:5px;">
+                                                <option value="" class = "d-flex align-items-center">Pilih Kecamatan
+                                                </option>
+                                                @foreach (getKecamatan() as $item)
+                                                    <option value="{{ $item->nama_kecamatan }}">{{ $item->nama_kecamatan }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-xl-3 mb-2 col-md-4 col-sm-6">
+                                            <select name="kelurahan_cluster"
+                                                id="kelurahan_cluster"class="form-control btn-square js-example-basic-single col-sm-12"
+                                                style="border: 1px solid #808080;">
+                                                <option value="" class = "d-flex align-items-center">Pilih Kelurahan
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-xl-2 mb-2 col-md-4 col-sm-6">
+                                            <a class="btn btn-primary btn-square" type="button"
+                                                onclick="filterWilayahCluster()">Terapkan<span class="caret"></span></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xl-12">
+                                <div class="card-body">
+                                    <canvas id="clusterChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4 col-md-6 col-lg-3">
                 <div class="col-xl-12">
                     <div class="card o-hidden">
                         <div class="card-header pb-0">
                             <div class="row">
-                                <div class="col-xl-5">
+                                <div class="col-xl-12">
                                     <h6>Tunggakan Bedasarkan Level</h6>
                                 </div>
-                                <div class="col-xl-7">
+                                <div class="col-xl-12">
                                     <div class="mb-3 draggable">
                                         <div class="input-group">
                                             <div class="col-xl-7">
@@ -136,9 +185,8 @@
                                         <tr>
                                             <th>NOP</th>
                                             <th>Nama</th>
-                                            <th>Nominal Tunggakan</th>
                                             <th>Jumlah Tunggakan</th>
-                                            <th>Level</th>
+                                            <th>Nominal Tunggakan</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -147,7 +195,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-4">
+            <div class="col-xl-4 d-none">
                 <div>
                     <div class="card o-hidden">
                         <div class="card-header pb-0">
@@ -197,6 +245,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Plugins JS Ends-->
     <script>
         function newexportaction(e, dt, button, config) {
@@ -245,6 +294,8 @@
         var currentYear = day.getFullYear();
         var curKelurahan = $('#kelurahan').val();
         var curKecamatan = $('#kecamatan').val();
+        var curKel = $('#kelurahan_cluster').val();
+        var curKec = $('#kecamatan_cluster').val();
 
         function filterKel() {
             $('#kecamatan').on('change', function() {
@@ -312,6 +363,39 @@
             }
         }
 
+        function filterKelCluster() {
+            $('#kecamatan_cluster').on('change', function() {
+                var kecamatan = this.value;
+                $("#kelurahan_cluster").html('');
+                $.ajax({
+                    url: '{{ route('pbb.cluster.get_wilayah') }}',
+                    type: "GET",
+                    data: {
+                        "wilayah": 'kecamatan',
+                        "data": kecamatan
+                    },
+                    dataType: 'json',
+                    success: function(result) {
+                        $('#kelurahan_cluster').append(
+                            '<option value="" "class = "d-flex align-items-center">Pilih Kelurahan</option>'
+                        );
+                        $.each(result, function(key, value) {
+                            $("#kelurahan_cluster").append('<option value="' + value
+                                .kelurahan + '"class = "d-flex align-items-center">' + value
+                                .kelurahan + '</option>');
+                        });
+                    }
+                });
+            });
+        }
+
+        function filterWilayahCluster() {
+            var kecamatan = $('#kecamatan_cluster').val();
+            var kelurahan = $('#kelurahan_cluster').val();
+            if (kecamatan !== null || kelurahan !== null) {
+                loadClusterChartNop(kecamatan, kelurahan);
+            }
+        }
 
         function table_tunggakan_nop(kecamatan = curKecamatan, kelurahan = curKelurahan, tahun = []) {
 
@@ -353,6 +437,10 @@
                         name: 'nama_subjek_pajak'
                     },
                     {
+                        data: 'alamat_objek_pajak',
+                        name: 'alamat_objek_pajak'
+                    },
+                    {
                         data: 'kecamatan',
                         name: 'kecamatan'
                     },
@@ -361,16 +449,9 @@
                         name: 'kelurahan'
                     },
                     {
-                        data: 'nominal_ketetapan',
-                        name: 'nominal_ketetapan'
-                    },
-                    {
-                        data: 'nominal_denda',
-                        name: 'nominal_denda'
-                    },
-                    {
                         data: 'nominal_tunggakan',
-                        name: 'nominal_tunggakan'
+                        name: 'nominal_tunggakan',
+                        className: 'text-right' // Tambahkan className di sini
                     },
                 ],
                 order: [
@@ -419,15 +500,13 @@
                         data: 'nominal_tunggakan',
                         name: 'nominal_tunggakan'
                     },
-                    {
-                        data: 'level',
-                        name: 'level'
-                    },
                 ],
                 order: [
                     [0, 'asc'],
                     [1, 'asc']
                 ],
+                lengthMenu: [5, 10, 15, 25],
+                pageLength: 5
             });
         }
 
@@ -481,9 +560,113 @@
                 placeholder: "Pilih Tahun (Bisa Multi Tahun)"
             });
             filterKel();
+            filterKelCluster();
             table_tunggakan_nop();
             table_pembayaran_tunggakan();
             table_tunggakan_level();
+            loadClusterChartNop();
         })
+
+        function loadClusterChartNop(kecamatan = curKec, kelurahan = curKel) {
+            for (const instance of Object.values(Chart.instances)) {
+                instance.destroy();
+            }
+            $.ajax({
+                url: '{{ route('pbb.tunggakan.data_tunggakan_wilayah_cluster_nop') }}',
+                type: 'GET',
+                data: {
+                    "kelurahan": kelurahan,
+                    "kecamatan": kecamatan
+                },
+                dataType: 'json',
+                success: function(data) {
+                    const clusterColors = [{
+                            label: 'Cluster 0',
+                            backgroundColor: 'rgba(0, 128, 0, 0.6)',
+                            borderColor: 'rgba(0, 128, 0, 1)'
+                        },
+                        {
+                            label: 'Cluster 1',
+                            backgroundColor: 'rgba(255, 255, 0, 0.6)',
+                            borderColor: 'rgba(255, 255, 0, 1)'
+                        },
+                        {
+                            label: 'Cluster 2',
+                            backgroundColor: 'rgba(255, 0, 0, 0.6)',
+                            borderColor: 'rgba(255, 0, 0, 1)'
+                        }
+                    ];
+
+                    const datasets = clusterColors.map(color => ({
+                        label: color.label,
+                        data: [],
+                        backgroundColor: color.backgroundColor,
+                        borderColor: color.borderColor,
+                        borderWidth: 1
+                    }));
+
+                    data.forEach(item => {
+                        const clusterIndex = item.cluster;
+                        datasets[clusterIndex].data.push({
+                            x: item.total_nominal_tunggakan,
+                            y: item.total_jumlah_tunggakan,
+                            z: item.nop
+                        });
+                    });
+
+                    const ctx = document.getElementById('clusterChart').getContext('2d');
+                    const clusterChart = new Chart(ctx, {
+                        type: 'scatter',
+                        data: {
+                            datasets: datasets
+                        },
+                        options: {
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Jumlah Nominal Tunggakan'
+                                    },
+                                    ticks: {
+                                        beginAtZero: true
+                                    }
+                                },
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Jumlah Tunggakan'
+                                    },
+                                    ticks: {
+                                        beginAtZero: true
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: true
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.raw.z || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            label += '(Jumlah tunggakan :' + context.raw.x +
+                                                ',Total Nominal : ' + context.raw.y +
+                                                ')';
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading chart data:', error);
+                }
+            });
+        }
     </script>
 @endsection
