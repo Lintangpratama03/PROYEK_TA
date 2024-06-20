@@ -17,8 +17,31 @@
         </div>
     </div>
 
-    <div class="col-sm-12">
+    <div class="col-sm-12 text-end">
         <button id="toggleMap" class="btn btn-map-off">Turn Map On</button>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="row">
+                <div class="col-xl-3 mb-2 col-md-4 col-sm-6">
+                    <select name="filter_peta" id="filter_peta"
+                        class="form-control btn-square js-example-basic-single col-sm-12 "
+                        style="border: 1px solid #808080;border-radius:5px;">
+                        <option value="1" class = "d-flex align-items-center">Tanpa Filter
+                        </option>
+                        <option value="2" class = "d-flex align-items-center">Menurut Nominal
+                        </option>
+                        <option value="3" class = "d-flex align-items-center">Menurut Tunggakan
+                        </option>
+                    </select>
+                </div>
+                <div class="col-xl-2 mb-2 col-md-4 col-sm-6">
+                    <a class="btn btn-primary btn-square" type="button" onclick="filterWilayahCluster()">Terapkan<span
+                            class="caret"></span></a>
+                </div>
+            </div>
+        </div>
     </div>
     <br>
     <div class="row">
@@ -103,31 +126,20 @@
                                 </tr>
                                 <tr>
                                     <td>Total Jumlah Tunggakan</td>
-                                    <td>{{ $totalData['total_jumlah_tunggakan'] }}</td>
+                                    <td id="total-jumlah-tunggakan"></td>
                                 </tr>
                                 <tr>
                                     <td>Total Nominal Tunggakan</td>
-                                    <td>Rp {{ number_format($totalData['total_nominal_tunggakan'], 0, ',', '.') }}</td>
+                                    <td id="total-nominal-tunggakan"></td>
                                 </tr>
                                 <tr>
                                     <td>Total NOP (Menunggak)</td>
-                                    <td>{{ $totalData['total_jumlah_nop'] }}</td>
-                                </tr>
-                                <tr>
-                                    <td>Level Ringan</td>
-                                    <td>{{ $totalData['nop_ringan'] }}</td>
-                                </tr>
-                                <tr>
-                                    <td>Level Sedang</td>
-                                    <td>{{ $totalData['nop_sedang'] }}</td>
-                                </tr>
-                                <tr>
-                                    <td>Level Berat</td>
-                                    <td>{{ $totalData['nop_berat'] }}</td>
+                                    <td id="total-jumlah-nop"></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+                    <canvas id="clusterChart"></canvas>
                 </div>
             </div>
         </div>
@@ -143,6 +155,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
         var map = L.map('map').setView([-7.629523, 111.532680], 14);
@@ -152,6 +165,7 @@
         });
 
         var toggleButton = document.getElementById('toggleMap');
+        var geoJsonLayerGroup = L.layerGroup().addTo(map);
 
         function toggleMapLayer() {
             if (map.hasLayer(osmLayer)) {
@@ -169,215 +183,202 @@
 
         toggleButton.addEventListener('click', toggleMapLayer);
 
+        var curKec = $('#filter_peta').val();
+
+        function filterWilayahCluster() {
+            var filter = $('#filter_peta').val();
+            if (filter !== null) {
+                // Hapus semua layer yang ada di geoJsonLayerGroup sebelum memuat data baru
+                geoJsonLayerGroup.eachLayer(function(layer) {
+                    geoJsonLayerGroup.removeLayer(layer);
+                });
+                loadMapData(filter);
+            }
+        }
+
         // Mengambil data dari controller
-        var data = @json($query_total);
+        function loadMapData(filter = curKec) {
+            fetch("{{ route('pbb.peta-tunggakan.datapeta') }}?filter=" + filter)
+                .then(response => response.json())
+                .then(data => {
+                    // Hapus layer GeoJSON sebelumnya
+                    geoJsonLayerGroup.clearLayers();
 
-        // Membuat layer GeoJSON dari data
-        var geoJsonLayer = L.geoJson(data.map(function(feature) {
-            return {
-                type: 'Feature',
-                geometry: JSON.parse(feature.geometry),
-                properties: {
-                    kecamatan: feature.kecamatan,
-                    kelurahan: feature.kelurahan,
-                    total_jumlah_tunggakan: feature.total_jumlah_tunggakan,
-                    total_nominal_tunggakan: feature.total_nominal_tunggakan,
-                    total_jumlah_nop: feature.total_jumlah_nop,
-                    nop_ringan: feature.nop_ringan,
-                    nop_sedang: feature.nop_sedang,
-                    nop_berat: feature.nop_berat,
-                    backgroundColor: feature.backgroundColor,
-                    borderColor: feature.borderColor,
-                    cluster: feature.cluster
-                }
-            };
-        }), {
-            style: function(feature) {
-                return {
-                    fillColor: feature.properties.backgroundColor,
-                    fillOpacity: 0.6,
-                    color: feature.properties.borderColor,
-                    weight: 2
-                }
-            },
-            onEachFeature: function(feature, layer) {
-                layer.bindPopup(`
-            <strong>Kecamatan:</strong> ${feature.properties.kecamatan}<br>
-            <strong>Kelurahan:</strong> ${feature.properties.kelurahan}<br>
-            <strong>Level Ringan:</strong> ${feature.properties.nop_ringan}<br>
-            <strong>Level Sedang:</strong> ${feature.properties.nop_sedang}<br>
-            <strong>Level Berat:</strong> ${feature.properties.nop_berat}<br>
-        `);
-            }
-        }).addTo(map);
+                    // Hapus legend sebelumnya
+                    $('.legend').remove();
 
-        // Menambahkan label kelurahan di tengah blok geojson
-        geoJsonLayer.eachLayer(function(layer) {
-            var centroid = layer.getBounds().getCenter();
-            if (layer.feature.properties.kelurahan === "Rejo") {
-                centroid.lng += 0.004; // Adjust this value to move the label to the right
-            }
-            L.marker(centroid, {
-                icon: L.divIcon({
-                    className: 'kelurahan-label',
-                    html: `<div>${layer.feature.properties.kelurahan}</div>`,
-                    iconSize: [100, 40]
-                })
-            }).addTo(map);
-        });
+                    // Membuat layer GeoJSON dari data
+                    var geoJsonLayer = L.geoJson(data.query_total.map(function(feature) {
+                        return {
+                            type: 'Feature',
+                            geometry: JSON.parse(feature.geometry),
+                            properties: {
+                                kecamatan: feature.kecamatan,
+                                kelurahan: feature.kelurahan,
+                                total_jumlah_tunggakan: feature.total_jumlah_tunggakan,
+                                total_nominal_tunggakan: feature.total_nominal_tunggakan,
+                                total_jumlah_nop: feature.total_jumlah_nop,
+                                nop_ringan: feature.nop_ringan,
+                                nop_sedang: feature.nop_sedang,
+                                nop_berat: feature.nop_berat,
+                                backgroundColor: feature.backgroundColor,
+                                borderColor: feature.borderColor,
+                                cluster: feature.cluster
+                            }
+                        };
+                    }), {
+                        style: function(feature) {
+                            return {
+                                fillColor: feature.properties.backgroundColor,
+                                fillOpacity: 0.6,
+                                color: feature.properties.borderColor,
+                                weight: 2
+                            }
+                        },
+                        onEachFeature: function(feature, layer) {
+                            layer.bindPopup(`
+                                <strong>Kecamatan:</strong> ${feature.properties.kecamatan}<br>
+                                <strong>Kelurahan:</strong> ${feature.properties.kelurahan}<br>
+                                <strong>Jumlah Tunggakan:</strong> ${feature.properties.total_jumlah_tunggakan}<br>
+                                <strong>Nominal Tunggakan:</strong> ${feature.properties.total_nominal_tunggakan}<br>
+                            `);
+                        }
+                    });
 
-        // Membuat legenda
-        var legend = L.control({
-            position: 'bottomright'
-        });
-        legend.onAdd = function(map) {
-            var div = L.DomUtil.create('div', 'info legend');
-            var kecamatanSet = new Set();
-            var legendItems = data.map(function(item) {
-                if (!kecamatanSet.has(item.kecamatan)) {
-                    kecamatanSet.add(item.kecamatan);
-                    return `
-                        <li>
-                            <i class="color-box" style="background-color: ${item.backgroundColor};"></i>
-                            Kecamatan ${item.kecamatan}
-                        </li>
-                    `;
-                }
-                return '';
-            }).join('');
-            div.innerHTML = `<ul>${legendItems}</ul>`;
-            return div;
-        };
-        legend.addTo(map);
+                    // Menambahkan layer GeoJSON baru ke LayerGroup
+                    geoJsonLayerGroup.addLayer(geoJsonLayer);
 
-        geoJsonLayer.on('click', function(e) {
-            var layer = e.layer;
-            var props = layer.feature.properties;
+                    // Menambahkan label kelurahan di tengah blok geojson
+                    geoJsonLayer.eachLayer(function(layer) {
+                        var centroid = layer.getBounds().getCenter();
+                        if (layer.feature.properties.kelurahan === "Rejo") {
+                            centroid.lng += 0.004; // Adjust this value to move the label to the right
+                        }
+                        L.marker(centroid, {
+                            icon: L.divIcon({
+                                className: 'kelurahan-label',
+                                html: `<div>${layer.feature.properties.kelurahan}</div>`,
+                                iconSize: [100, 40]
+                            })
+                        }).addTo(geoJsonLayerGroup);
+                    });
 
-            // Tampilkan detail di panel
-            $('#detail-wilayah').html(`
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Judul</th>
-                            <th>Nilai</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Kecamatan</td>
-                            <td>${props.kecamatan}</td>
-                        </tr>
-                        <tr>
-                            <td>Kelurahan</td>
-                            <td>${props.kelurahan}</td>
-                        </tr>
-                        <tr>
-                            <td>Total Tunggakan</td>
-                            <td>${props.total_jumlah_tunggakan}</td>
-                        </tr>
-                        <tr>
-                            <td>Total Nominal Tunggakan</td>
-                            <td>Rp ${props.total_nominal_tunggakan.toLocaleString()}</td>
-                        </tr>
-                        <tr>
-                            <td>Total NOP (Menunggak)</td>
-                            <td>${props.total_jumlah_nop}</td>
-                        </tr>
-                        <tr>
-                            <td>Level Ringan</td>
-                            <td>${props.nop_ringan}</td>
-                        </tr>
-                        <tr>
-                            <td>Level Sedang</td>
-                            <td>${props.nop_sedang}</td>
-                        </tr>
-                        <tr>
-                            <td>Level Berat</td>
-                            <td>${props.nop_berat}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            `);
-        });
-        var filterOption = document.getElementById('filterOption');
-        filterOption.addEventListener('change', function() {
-            var option = this.value;
-            var filteredData;
+                    // Membuat legenda baru
+                    var legend = L.control({
+                        position: 'bottomright'
+                    });
+                    legend.onAdd = function(map) {
+                        var div = L.DomUtil.create('div', 'info legend');
+                        var legendItems = '';
 
-            if (option === 'nop_berat') {
-                filteredData = data.sort((a, b) => b.nop_berat - a.nop_berat);
-            } else if (option === 'nop_sedang') {
-                filteredData = data.sort((a, b) => b.nop_sedang - a.nop_sedang);
-            } else if (option === 'nop_ringan') {
-                filteredData = data.sort((a, b) => b.nop_ringan - a.nop_ringan);
-            } else {
-                filteredData = data;
-            }
+                        if (filter == 1) {
+                            // Legenda berdasarkan cluster
+                            var kecamatanSet = new Set();
+                            legendItems = data.query_total.map(function(item) {
+                                if (!kecamatanSet.has(item.kecamatan)) {
+                                    kecamatanSet.add(item.kecamatan);
+                                    return `
+                                        <li>
+                                            <i class="color-box" style="background-color: ${item.backgroundColor};"></i>
+                                            Kecamatan ${item.kecamatan}
+                                        </li>
+                                    `;
+                                }
+                                return '';
+                            }).join('');
+                        } else if (filter == 2) {
+                            // Legenda berdasarkan tingkat nominal tunggakan
+                            legendItems = `
+                                <li>
+                                    <i class="color-box" style="background-color: rgba(255, 0, 0, 0.6);"></i>
+                                    Nominal Tunggakan Parah
+                                </li>
+                                <li>
+                                    <i class="color-box" style="background-color: rgba(255, 255, 0, 0.6);"></i>
+                                    Nominal Tunggakan Sedang
+                                </li>
+                                <li>
+                                    <i class="color-box" style="background-color: rgba(0, 255, 0, 0.6);"></i>
+                                    Nominal Tunggakan Biasa
+                                </li>
+                            `;
+                        } else if (filter == 3) {
+                            // Legenda berdasarkan tingkat jumlah tunggakan
+                            legendItems = `
+                                <li>
+                                    <i class="color-box" style="background-color: rgba(255, 0, 0, 0.6);"></i>
+                                    Jumlah Tunggakan Parah
+                                </li>
+                                <li>
+                                    <i class="color-box" style="background-color: rgba(255, 255, 0, 0.6);"></i>
+                                    Jumlah Tunggakan Sedang
+                                </li>
+                                <li>
+                                    <i class="color-box" style="background-color: rgba(0, 255, 0, 0.6);"></i>
+                                    Jumlah Tunggakan Biasa
+                                </li>
+                            `;
+                        }
 
-            // Hapus layer GeoJSON sebelumnya
-            map.removeLayer(geoJsonLayer);
+                        div.innerHTML = `<ul>${legendItems}</ul>`;
+                        return div;
+                    };
+                    legend.addTo(map);
 
-            // Buat layer GeoJSON baru dengan data yang sudah difilter
-            geoJsonLayer = L.geoJson(filteredData.map(function(feature) {
-                return {
-                    type: 'Feature',
-                    geometry: JSON.parse(feature.geometry),
-                    properties: {
-                        kecamatan: feature.kecamatan,
-                        kelurahan: feature.kelurahan,
-                        total_jumlah_tunggakan: feature.total_jumlah_tunggakan,
-                        total_nominal_tunggakan: feature.total_nominal_tunggakan,
-                        total_jumlah_nop: feature.total_jumlah_nop,
-                        nop_ringan: feature.nop_ringan,
-                        nop_sedang: feature.nop_sedang,
-                        nop_berat: feature.nop_berat,
-                        backgroundColor: feature.backgroundColor,
-                        borderColor: feature.borderColor,
-                        cluster: feature.cluster
-                    }
-                };
-            }), {
-                style: function(feature) {
-                    return {
-                        fillColor: feature.properties.backgroundColor,
-                        fillOpacity: 0.6,
-                        color: feature.properties.borderColor,
-                        weight: 2
-                    }
-                },
-                onEachFeature: function(feature, layer) {
-                    layer.bindPopup(`
-                <strong>Kecamatan:</strong> ${feature.properties.kecamatan}<br>
-                <strong>Kelurahan:</strong> ${feature.properties.kelurahan}<br>
-                <strong>Level Ringan:</strong> ${feature.properties.nop_ringan}<br>
-                <strong>Level Sedang:</strong> ${feature.properties.nop_sedang}<br>
-                <strong>Level Berat:</strong> ${feature.properties.nop_berat}<br>
-            `);
-                }
-            }).addTo(map);
+                    geoJsonLayer.on('click', function(e) {
+                        var layer = e.layer;
+                        var props = layer.feature.properties;
 
-            // Hapus label kelurahan sebelumnya
-            map.eachLayer(function(layer) {
-                if (layer instanceof L.Marker && layer.options.icon && layer.options.icon.options.html) {
-                    map.removeLayer(layer);
-                }
-            });
+                        // Tampilkan detail di panel
+                        $('#detail-wilayah').html(`
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Judul</th>
+                                        <th>Nilai</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Kecamatan</td>
+                                        <td>${props.kecamatan}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Kelurahan</td>
+                                        <td>${props.kelurahan}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Tunggakan</td>
+                                        <td>${props.total_jumlah_tunggakan}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Nominal Tunggakan</td>
+                                        <td>Rp ${props.total_nominal_tunggakan.toLocaleString()}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total NOP (Menunggak)</td>
+                                        <td>${props.total_jumlah_nop}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        `);
 
-            // Tambahkan label kelurahan baru
-            geoJsonLayer.eachLayer(function(layer) {
-                var centroid = layer.getBounds().getCenter();
-                if (layer.feature.properties.kelurahan === "Rejo") {
-                    centroid.lng += 0.004; // Adjust this value to move the label to the right
-                }
-                L.marker(centroid, {
-                    icon: L.divIcon({
-                        className: 'kelurahan-label',
-                        html: `<div>${layer.feature.properties.kelurahan}</div>`,
-                        iconSize: [100, 40]
-                    })
-                }).addTo(map);
-            });
+                        // Load cluster chart data
+                        loadClusterChartNop(props.kecamatan, props.kelurahan);
+                    });
+
+                    // Set total data
+                    document.getElementById('total-jumlah-tunggakan').textContent = data.totalData
+                        .total_jumlah_tunggakan;
+                    document.getElementById('total-nominal-tunggakan').textContent =
+                        `Rp ${data.totalData.total_nominal_tunggakan.toLocaleString()}`;
+                    document.getElementById('total-jumlah-nop').textContent = data.totalData.total_jumlah_nop;
+                });
+        }
+        $(document).ready(function() {
+            loadMapData();
         });
     </script>
+
+
 @endsection

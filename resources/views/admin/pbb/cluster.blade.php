@@ -203,8 +203,8 @@
                                         <tr>
                                             <th>Kecamatan</th>
                                             <th>Kelurahan</th>
-                                            <th>Jumlah NOP</th>
                                             <th>Jumlah Tunggakan</th>
+                                            <th>Nominal Tunggakan</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -481,12 +481,12 @@
                         name: 'kelurahan'
                     },
                     {
-                        data: 'jumlah',
-                        name: 'jumlah'
-                    },
-                    {
                         data: 'jumlah_tunggakan',
                         name: 'jumlah_tunggakan'
+                    },
+                    {
+                        data: 'jumlah',
+                        name: 'jumlah'
                     },
                 ],
 

@@ -177,7 +177,9 @@ Route::middleware($middleware_auth)->group(function () {
             });
             Route::prefix('peta-tunggakan')->name('peta-tunggakan.')->group(function () {
                 Route::get('/', 'PBB\PetaTunggakanController@index')->name('index');
+                Route::get('/datapeta', 'PBB\PetaTunggakanController@datapeta')->name('datapeta');
             });
+
             Route::prefix('tempatbayar')->name('tempatbayar.')->group(function () {
                 Route::get('/', 'PBB\TPController@index')->name('index');
                 Route::get('/datatable_penerimaan_tahun', 'PBB\TPController@datatable_penerimaan_tahun')->name('datatable_penerimaan_tahun');

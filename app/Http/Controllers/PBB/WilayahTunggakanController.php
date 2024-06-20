@@ -136,13 +136,13 @@ class WilayahTunggakanController extends Controller
             kecamatan,
             kelurahan,
             total_jumlah_tunggakan,
-            total_jumlah_nop
+            total_nominal_tunggakan
         FROM data.v_tunggakan_level_daerah
         GROUP BY 
             kecamatan,
             kelurahan,
             total_jumlah_tunggakan,
-            total_jumlah_nop
+            total_nominal_tunggakan
         ORDER BY kecamatan DESC) AS a';
 
         // Execute the query
@@ -151,7 +151,7 @@ class WilayahTunggakanController extends Controller
                     a.kecamatan,
                     a.kelurahan,
                     a.total_jumlah_tunggakan,
-                    a.total_jumlah_nop
+                    a.total_nominal_tunggakan
                 ");
         if (!is_null($kecamatan)) {
             $query->where('a.kecamatan', $kecamatan);
@@ -173,8 +173,8 @@ class WilayahTunggakanController extends Controller
                 $arr[] = [
                     'kecamatan' => $row->kecamatan,
                     'kelurahan' => $rowetail_kelurahan,
-                    'jumlah' => number_format($row->total_jumlah_nop),
-                    'jumlah_tunggakan' => number_format($row->total_jumlah_tunggakan)
+                    'jumlah_tunggakan' => number_format($row->total_jumlah_tunggakan),
+                    'jumlah' => "Rp." . number_format($row->total_nominal_tunggakan)
                 ];
             }
         }
@@ -214,8 +214,8 @@ class WilayahTunggakanController extends Controller
         // dd($query);
         $data = $query->map(function ($row) {
             return [
-                $row->total_nominal_tunggakan,
-                $row->total_jumlah_tunggakan
+                $row->total_jumlah_tunggakan,
+                $row->total_nominal_tunggakan
             ];
         })->toArray();
         // dd($data);

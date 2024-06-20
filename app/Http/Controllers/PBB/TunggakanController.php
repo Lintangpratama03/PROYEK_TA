@@ -133,8 +133,8 @@ class TunggakanController extends Controller
         // dd($query);
         $data = $query->map(function ($row) {
             return [
-                $row->nominal_tunggakan,
                 $row->jumlah_tunggakan,
+                $row->nominal_tunggakan
             ];
         })->toArray();
         // dd($data);
