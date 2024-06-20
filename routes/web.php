@@ -22,6 +22,12 @@ Route::group(['prefix' => "login"], function () {
     Route::get('/logout', 'Auth\LoginController@logout')->name('logout');
     Route::get('/reset_password', 'Auth\LoginController@resetPassword')->name('login.reset.password');
     Route::post('/do_reset_password', 'Auth\LoginController@doResetPassword')->name('do.reset.password');
+
+    Route::get('/update_akun', 'Auth\LoginController@get_update_akun')->name('update_akun.index');
+    Route::post('/update_pass/{id}', 'Auth\LoginController@update_pass')->name('update_pass.update');
+
+    Route::get('/profile/{id}', 'Auth\LoginController@show')->name('profile.show');
+    Route::post('/update_info/{id}', 'Auth\LoginController@updateInfo')->name('update_info');
 });
 
 Route::group(['prefix' => "register"], function () {

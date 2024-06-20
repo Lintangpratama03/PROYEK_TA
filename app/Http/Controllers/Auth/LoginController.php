@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 
 class LoginController extends Controller
 {
@@ -18,6 +19,135 @@ class LoginController extends Controller
     public function index()
     {
         return view('admin.login');
+    }
+
+    public function get_update_akun()
+    {
+        $session = Session::get("user_app");
+        $id = decrypt($session['user_id']);
+        // dd($id);
+        $data['id'] = $id;
+        $akses = get_url_akses();
+        if ($akses) {
+            return redirect()->route("dashboard.index");
+        } else {
+            return view('admin.update_akun', $data);
+        }
+    }
+
+    public function update_pass(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'password_lama' => 'required',
+            'password_baru' => 'required|min:8',
+        ], [
+            'password_lama.required' => 'Password lama tidak boleh kosong!',
+            'password_baru.required' => 'Password baru tidak boleh kosong!',
+            'password_baru.min' => 'Password baru harus memiliki minimal 8 karakter!',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->all()]);
+        } else {
+            $passwordLama = $request->input('password_lama');
+            $passwordBaru = $request->input('password_baru');
+
+            // Ambil password lama dari database
+            $user = DB::table('auth.user_account')->where('id', $id)->first();
+            if (!$user || !Hash::check($passwordLama, $user->password)) {
+                return response()->json(['success' => false, 'error' => ['Password lama salah']]);
+            }
+
+            $passwordBaruMD5 = Hash::make($passwordBaru);
+
+            $update = DB::table('auth.user_account')
+                ->where('id', $id)
+                ->update(['password' => $passwordBaruMD5]);
+
+            if ($update) {
+                return response()->json(['success' => true, 'message' => 'Password berhasil diperbarui']);
+            } else {
+                return response()->json(['success' => false, 'error' => ['Gagal memperbarui password']]);
+            }
+        }
+    }
+
+
+    public function show(string $id)
+    {
+        // dd($id);
+        // Ambil data dari kedua tabel dengan join
+        $user_data = DB::table("auth.user_account as aua")
+            ->join("auth.user_group as aug", "aug.id", "aua.id_group")
+            ->where('aua.id', "=", $id)
+            ->whereNull("aua.deleted_at")
+            ->selectRaw("
+                    aua.id as user_id,
+                    aua.is_aktif,
+                    aua.npwpd,
+                    aua.username,
+                    aua.nama,
+                    aua.email,
+                    aua.password,
+                    aua.password_updated_at,
+                    aua.id_wp,
+                    aua.id_ppat,
+                    aua.id_waris,
+                    aug.id as group_id,
+                    aug.nama_group as group_name,
+                    aug.nama_ditampilkan as displayed_group_name
+            ")
+            ->first();
+        // dd($user_data);
+        return response()->json(["result" => [
+            "nama" => $user_data->nama,
+            "username" => $user_data->username,
+            "email" => $user_data->email,
+            "group_name" => $user_data->displayed_group_name,
+        ]]);
+    }
+    public function updateInfo(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'group' => 'required|string|max:255',
+        ], [
+            'nama.required' => 'Nama tidak boleh kosong!',
+            'nama.max' => 'Nama maksimal 255 karakter!',
+            'email.required' => 'Email tidak boleh kosong!',
+            'email.email' => 'Email tidak valid!',
+            'email.max' => 'Email maksimal 255 karakter!',
+            'group.required' => 'Nama Group tidak boleh kosong!',
+            'group.max' => 'Nama Group maksimal 255 karakter!',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->all()]);
+        } else {
+            $nama = $request->input('nama');
+            $email = $request->input('email');
+            $group = $request->input('group');
+
+            $update = DB::table('auth.user_account')
+                ->where('id', $id)
+                ->update([
+                    'nama' => $nama,
+                    'email' => $email,
+                ]);
+
+            $updateGroup = DB::table('auth.user_group')
+                ->where('id', $id)
+                ->update([
+                    'nama_group' => $group,
+                ]);
+
+            if ($update || $updateGroup) {
+                return response()->json(['success' => true, 'message' => 'Informasi berhasil diperbarui']);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Gagal memperbarui informasi']);
+            }
+        }
     }
 
     /**
