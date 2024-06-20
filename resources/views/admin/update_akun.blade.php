@@ -124,7 +124,7 @@
                                                                 placeholder="Masukkan Password Lama ..." id="password-lama"
                                                                 name="password-lama">
                                                             <button type="button"
-                                                                class="btn btn-outline-secondary toggle-password">
+                                                                class="btn btn-outline-primary toggle-password">
                                                                 <i class="fa fa-eye"></i> Show
                                                             </button>
                                                         </div>
@@ -255,7 +255,7 @@
                                 email: email,
                                 group: group,
                                 password: result.value
-                                .password, // Pass password from SweetAlert2 input
+                                    .password, // Pass password from SweetAlert2 input
                                 _token: csrfToken
                             },
                             dataType: "json",

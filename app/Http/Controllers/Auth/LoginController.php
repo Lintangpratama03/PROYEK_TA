@@ -185,23 +185,6 @@ class LoginController extends Controller
                     $password_updated_at = $user_data->password_updated_at;
                     $now = date("Y-m-d");
 
-                    // if ($password_updated_at) {
-                    //     $selisih_waktu = date_diff(date_create($now), date_create($password_updated_at));
-                    //     if ($selisih_waktu->m >= 3) {
-                    //         // dd("harus reset");
-                    //         $redirect_route = route('login.reset.password',['user_id'=>encrypt($user_data->user_id)]);
-                    //         return response()->json([
-                    //             'status' => 'success', 
-                    //             'message' => 'Berhasil melakukan login, Mohon tunggu sebentar',
-                    //             'route_redirect' => $redirect_route
-                    //         ]);
-                    //     }
-
-                    // }else{
-                    //     $user_id = $user_data->user_id;
-                    //     $data_password['password_updated_at'] = $now;
-                    //     DB::table("auth.user_account")->where("id",$user_id)->update($data_password);
-                    // }
                     $this->setSession($user_data);
 
                     $nama_group = DB::table('auth.user_group')->select('nama_group')->where('id', $user_data->group_id)->first();
