@@ -230,40 +230,62 @@
                 var email = $('#email').val();
                 var group = $('#group').val();
 
-                $.ajax({
-                    url: "/login/update_info/" + id,
-                    type: 'POST',
-                    data: {
-                        nama: nama,
-                        email: email,
-                        group: group,
-                        _token: csrfToken
+                // Prompt for password using SweetAlert2
+                Swal.fire({
+                    title: 'Konfirmasi Identitas',
+                    html: '<input type="password" id="swal-input-password" class="swal2-input" placeholder="Masukkan password Anda">',
+                    showCancelButton: true,
+                    confirmButtonText: 'Submit',
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        const password = document.getElementById('swal-input-password').value;
+                        return {
+                            password: password
+                        };
                     },
-                    dataType: "json",
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                title: 'Sukses!',
-                                text: 'Informasi berhasil diperbarui',
-                                icon: 'success',
-                                timer: 5000,
-                            });
-                        } else {
-                            var errorMessages = "<ul>";
-                            $.each(response.error, function(key, value) {
-                                errorMessages += "<li>" + value + "</li>";
-                            });
-                            errorMessages += "</ul>";
-                            Swal.fire({
-                                icon: "error",
-                                title: "Gagal",
-                                html: errorMessages,
-                            });
-                        }
+                    allowOutsideClick: () => !Swal.isLoading()
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Proceed with AJAX request
+                        $.ajax({
+                            url: "/login/update_info/" + id,
+                            type: 'POST',
+                            data: {
+                                nama: nama,
+                                email: email,
+                                group: group,
+                                password: result.value
+                                .password, // Pass password from SweetAlert2 input
+                                _token: csrfToken
+                            },
+                            dataType: "json",
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: 'Sukses!',
+                                        text: 'Informasi berhasil diperbarui',
+                                        icon: 'success',
+                                        timer: 5000,
+                                    });
+                                } else {
+                                    var errorMessages = "<ul>";
+                                    $.each(response.error, function(key, value) {
+                                        errorMessages += "<li>" + value + "</li>";
+                                    });
+                                    errorMessages += "</ul>";
+                                    Swal.fire({
+                                        icon: "error",
+                                        title: "Gagal",
+                                        html: errorMessages,
+                                    });
+                                }
+                            }
+                        });
                     }
                 });
             });
         }
+
 
         function updatePassword() {
             $('body').on('click', '.btn-update-akun', function(e) {

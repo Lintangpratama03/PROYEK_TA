@@ -112,6 +112,7 @@ class LoginController extends Controller
             'nama' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'group' => 'required|string|max:255',
+            'password' => 'required|string', // Add validation for password
         ], [
             'nama.required' => 'Nama tidak boleh kosong!',
             'nama.max' => 'Nama maksimal 255 karakter!',
@@ -120,6 +121,7 @@ class LoginController extends Controller
             'email.max' => 'Email maksimal 255 karakter!',
             'group.required' => 'Nama Group tidak boleh kosong!',
             'group.max' => 'Nama Group maksimal 255 karakter!',
+            'password.required' => 'Password tidak boleh kosong!', // Error message for missing password
         ]);
 
         if ($validator->fails()) {
@@ -128,7 +130,17 @@ class LoginController extends Controller
             $nama = $request->input('nama');
             $email = $request->input('email');
             $group = $request->input('group');
+            $password = $request->input('password'); // Retrieve password from request
 
+            // Verify password first
+            $user = DB::table('auth.user_account')->where('id', $id)->first();
+
+            if (!$user || !Hash::check($password, $user->password)) {
+                // If password doesn't match, return error response
+                return response()->json(['success' => false, 'error' => ['Password salah']]);
+            }
+
+            // Password is correct, proceed to update information
             $update = DB::table('auth.user_account')
                 ->where('id', $id)
                 ->update([
@@ -149,6 +161,7 @@ class LoginController extends Controller
             }
         }
     }
+
 
     /**
      * Show the form for creating a new resource.
