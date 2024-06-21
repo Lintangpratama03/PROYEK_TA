@@ -358,7 +358,7 @@ class DataController extends Controller
     public function datatable_tunggakan_nop()
     {
 
-        $query = DB::table("data.tunggakan")->orderBy('tahun_sppt', 'DESC')->orderBy('kecamatan', 'ASC')->orderBy('kelurahan', 'ASC')->get();
+        $query = DB::connection("pgsql_pbb")->table("data.detail_tunggakan_pbb")->orderBy('tahun_sppt', 'DESC')->orderBy('kecamatan', 'ASC')->orderBy('kelurahan', 'ASC')->get();
         // dd($query);
         $arr = array();
         if ($query->count() > 0) {
@@ -368,8 +368,8 @@ class DataController extends Controller
                     array(
                         "id" => $d->id,
                         "tahun_sppt" => $d->tahun_sppt,
-                        "nop_baku" => number_format($d->nop_baku),
-                        "nop_bayar" => number_format($d->nop_bayar),
+                        "nop" => $d->nop,
+                        "nominal_tunggakan" => "RP." . number_format($d->nominal_tunggakan),
                         "kecamatan" => $d->kecamatan,
                         "kelurahan" => $d->kelurahan,
                         "sumber_data" => $d->sumber_data,

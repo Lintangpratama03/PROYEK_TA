@@ -20,24 +20,24 @@ class ImportTunggakan implements ToCollection
         foreach ($rows as $key => $value) {
             if ($key != 0) {
                 // dd($value);
-                $insert['tahun_sppt']     = $value[1];
-                $insert['nominal_baku'] = $value[2];
-                $insert['nominal_pokok'] = $value[3];
-                $insert['nominal_denda'] = $value[4];
-                $insert['nominal_terima'] = $value[5];
-                $insert['nop_baku'] = $value[6];
-                $insert['nop_bayar'] = $value[7];
+                $insert['nop']     = $value[1];
+                $insert['tahun_sppt'] = $value[2];
+                $insert['nama_rekening'] = $value[3];
+                $insert['pbb_terutang'] = $value[4];
+                $insert['nominal_denda'] = $value[5];
+                $insert['nominal_tunggakan'] = $value[6];
+                $insert['tahun_pajak'] = $value[7];
                 $insert['kecamatan'] = $value[8];
                 $insert['kelurahan'] = $value[9];
                 $insert['sumber_data'] = $value[10];
                 $insert['tanggal_update'] =  $this->getDate($value[11]);
 
-                $cek_data = DB::table('data.tunggakan')->where('tahun_sppt', $value[1])->where('kecamatan', $value[8])->where('kelurahan', $value[9])->count();
+                $cek_data = DB::connection("pgsql_pbb")->table("data.detail_tunggakan_pbb")->where('tahun_sppt', $value[2])->where('nop', $value[1])->count();
                 if ($cek_data > 0) {
-                    DB::table('data.tunggakan')->where('tahun_sppt', $value[1])->where('kecamatan', $value[8])->where('kelurahan', $value[9])->delete();
+                    DB::connection("pgsql_pbb")->table("data.detail_tunggakan_pbb")->where('tahun_sppt', $value[2])->where('nop', $value[1])->delete();
                 }
                 if (!is_null($insert['sumber_data'])) {
-                    DB::table('data.tunggakan')->insert($insert);
+                    DB::connection("pgsql_pbb")->table("data.detail_tunggakan_pbb")->insert($insert);
                 }
             }
         }

@@ -1,16 +1,18 @@
 @php
-$menu = menu_item();
-$modul = get_role();
-$uri_segement = Request::segment(1);
+    $menu = menu_item();
+    $modul = get_role();
+    $uri_segement = Request::segment(1);
 @endphp
 
+
 <header class="main-nav">
-    <div class="sidebar-user text-center"><a class="setting-primary" href="javascript:void(0)"><i data-feather="settings"></i></a>
-        <img class="img-60 rounded-circle" src="{{asset("assets")}}/images/dashboard/1.png" alt="">
+    <div class="sidebar-user text-center"><a class="setting-primary" href="javascript:void(0)"><i
+                data-feather="settings"></i></a>
+        <img class="img-60 rounded-circle" src="{{ asset('assets') }}/images/dashboard/1.png" alt="">
         <div class="badge-bottom"><span class="badge badge-primary"></span></div><a href="user-profile.html">
-            <h6 class="mt-3 f-14 f-w-600">{{$sessions['nama']}}</h6>
+            <h6 class="mt-3 f-14 f-w-600">{{ $sessions['nama'] }}</h6>
         </a>
-        <p class="mb-0 font-roboto">{{$sessions['displayed_group_name']}}</p>
+        <p class="mb-0 font-roboto">{{ $sessions['displayed_group_name'] }}</p>
         <!-- <ul>
             <li><span><span class="counter">19.8</span>k</span>
                 <p>Follow</p>
@@ -29,7 +31,8 @@ $uri_segement = Request::segment(1);
             <div id="mainnav">
                 <ul class="nav-menu custom-scrollbar">
                     <li class="back-btn">
-                        <div class="mobile-back text-end"><span>Back</span><i class="fa fa-angle-right ps-2" aria-hidden="true"></i></div>
+                        <div class="mobile-back text-end"><span>Back</span><i class="fa fa-angle-right ps-2"
+                                aria-hidden="true"></i></div>
                     </li>
                     {{-- @php echo menu_create_limitless($menu, $modul, 'sidebar-menu', $uri_segement) @endphp --}}
 
@@ -39,7 +42,7 @@ $uri_segement = Request::segment(1);
                         </div>
                     </li>
 
-                    
+
                     {!! menu_create_limitless($menu, $modul, 'sidebar-menu', $uri_segement) !!}
                     {{-- 
                     <li><a class="nav-link menu-title link-nav" href="{{route('pad.index')}}"><i data-feather="pie-chart"></i><span>PAD</span></a></li>
@@ -81,14 +84,15 @@ $uri_segement = Request::segment(1);
                     --}}
                     <!-- <li class="dropdown"><a class="nav-link menu-title" href="javascript:void(0)"><i data-feather="activity"></i><span>RETRIBUSI</span></a>
                         <ul class="nav-submenu menu-content">
-                            <li><a href="{{route('retribusi.penerimaan.index')}}">Penerimaan</a></li>
-                            <li><a href="{{route('retribusi.op.index')}}">Objek Retribusi</a></li>
+                            <li><a href="{{ route('retribusi.penerimaan.index') }}">Penerimaan</a></li>
+                            <li><a href="{{ route('retribusi.op.index') }}">Objek Retribusi</a></li>
                         </ul>
                     </li> -->
 
-                    {{-- <li><a class="nav-link menu-title link-nav" href="{{route('data.index')}}"><i data-feather="package"></i><span>DAFTAR DATA</span></a></li>--}}
+                    {{-- <li><a class="nav-link menu-title link-nav" href="{{route('data.index')}}"><i data-feather="package"></i><span>DAFTAR DATA</span></a></li> --}}
 
-                    <li><a class="nav-link menu-title link-nav" href="{{route('logout')}}"><i data-feather="log-out"></i><span>Logout</span></a></li>
+                    <li><a class="nav-link menu-title link-nav" href="{{ route('logout') }}"><i
+                                data-feather="log-out"></i><span>Logout</span></a></li>
                 </ul>
             </div>
             <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>

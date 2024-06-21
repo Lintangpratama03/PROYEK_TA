@@ -1,12 +1,12 @@
 @extends('admin.layout.main')
-@section('title', 'Daftar Data - Smart Dashboard')
+@section('title', 'Import Data - Smart Dashboard')
 
 @section('content')
     <div class="container-fluid">
         <div class="page-header">
             <div class="row">
                 <div class="col-sm-6">
-                    <h3>Daftar Data</h3>
+                    <h3>Import Data</h3>
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="#">Data</a></li>
                         <li class="breadcrumb-item active">List</li>
@@ -164,7 +164,7 @@
 @endsection
 
 @section('js')
-    <script src="{{ asset("js/sweetalert2.all.min.js") }}"></script>
+    <script src="{{ asset('js/sweetalert2.all.min.js') }}"></script>
     <script type="text/javascript">
         function formatRupiah(angka) {
             var options = {

@@ -112,7 +112,7 @@ class LoginController extends Controller
             'nama' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'group' => 'required|string|max:255',
-            'password' => 'required|string', // Add validation for password
+            'password' => 'required|string', // Validation for password
         ], [
             'nama.required' => 'Nama tidak boleh kosong!',
             'nama.max' => 'Nama maksimal 255 karakter!',
@@ -130,37 +130,39 @@ class LoginController extends Controller
             $nama = $request->input('nama');
             $email = $request->input('email');
             $group = $request->input('group');
-            $password = $request->input('password'); // Retrieve password from request
+            $password = $request->input('password');
 
             // Verify password first
             $user = DB::table('auth.user_account')->where('id', $id)->first();
 
             if (!$user || !Hash::check($password, $user->password)) {
-                // If password doesn't match, return error response
                 return response()->json(['success' => false, 'error' => ['Password salah']]);
             }
+            $id_group = $user->id_group;
 
-            // Password is correct, proceed to update information
-            $update = DB::table('auth.user_account')
+            // Update nama_ditampilkan in user_group
+            $updateGroup = DB::table('auth.user_group')
+                ->where('id', $id_group)
+                ->update([
+                    'nama_ditampilkan' => $group, // Update nama_ditampilkan dengan nilai $groupname
+                ]);
+
+            // Update nama and email in user_account
+            $updateAccount = DB::table('auth.user_account')
                 ->where('id', $id)
                 ->update([
                     'nama' => $nama,
                     'email' => $email,
                 ]);
 
-            $updateGroup = DB::table('auth.user_group')
-                ->where('id', $id)
-                ->update([
-                    'nama_group' => $group,
-                ]);
-
-            if ($update || $updateGroup) {
+            if ($updateGroup || $updateAccount) {
                 return response()->json(['success' => true, 'message' => 'Informasi berhasil diperbarui']);
             } else {
                 return response()->json(['success' => false, 'message' => 'Gagal memperbarui informasi']);
             }
         }
     }
+
 
 
     /**
