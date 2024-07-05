@@ -214,21 +214,22 @@
         function get_data(this_) {
             var route = $(this_).data("route");
             console.log(route);
-            if (route === "getdata_target_realisasi" || route === "getdata_objek_pajak_wilayah" || route ===
+            if (route === "getdata_tunggakan" || route === "getdata_target_realisasi" || route ===
+                "getdata_objek_pajak_wilayah" || route ===
                 "getdata_penerimaan_tahun_sppt" || route === "getdata_kepatuhan_objek") {
                 // Hanya tampilkan filter tahun
                 $('#modal_ambil_data .modal-body').html(`
                     <div class="row">
                         <div class="mb-3 col-sm-12">
                             <select class="form-select" aria-label="Default select example" id="tahun" name="tahun">
-                                @foreach (array_combine(range(date('Y'), 2018), range(date('Y'), 2018)) as $year)
+                                @foreach (array_combine(range(date('Y'), 2015), range(date('Y'), 2015)) as $year)
                                     <option value="{{ $year }}">{{ $year }}</option>
                                 @endforeach
                             </select>
                         </div>
                     </div>
                 `);
-            } else if (route === "getdata_tunggakan" || route === "getdata_tunggakan_level" || route ===
+            } else if (route === "getdata_tunggakan_level" || route ===
                 "getdata_rekap_tunggakan" || route === "getdata_detail_tunggakan" || route ===
                 "getdata_detail_objek_pajak" ||
                 route === "getdata_pelaporan") {

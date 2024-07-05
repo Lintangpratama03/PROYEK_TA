@@ -55,6 +55,16 @@ Route::middleware($middleware_auth)->group(function () {
         Route::get('/dashboard', 'Dashboard\DashboardController@index')->name('dashboard');
     });
 
+    Route::prefix('kelola-peta')->group(function () {
+        Route::get('/', 'PBB\KelolaPetaController@index')->name('kelola_peta.index');
+        Route::get('/create', 'PBB\KelolaPetaController@create')->name('kelola_peta.create');
+        Route::post('/', 'PBB\KelolaPetaController@store')->name('kelola_peta.store');
+        Route::get('/{id}', 'PBB\KelolaPetaController@show')->name('kelola_peta.show');
+        Route::get('/{id}/edit', 'PBB\KelolaPetaController@edit')->name('kelola_peta.edit');
+        Route::put('/{id}', 'PBB\KelolaPetaController@update')->name('kelola_peta.update');
+        Route::delete('/{id}', 'PBB\KelolaPetaController@destroy')->name('kelola_peta.destroy');
+    });
+
 
     Route::group(['prefix' => "wilayah"], function () {
         Route::get('/select2Desa', 'Master\WilayahController@select2Desa')->name('select2Desa');

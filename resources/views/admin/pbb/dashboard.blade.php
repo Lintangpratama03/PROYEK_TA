@@ -206,7 +206,7 @@
                 xaxis: {
                     categories: tahun,
                     title: {
-                        text: 'Tahun'
+                        text: 'Tahun SPPT'
                     }
                 },
                 yaxis: {

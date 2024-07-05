@@ -122,7 +122,20 @@ return [
             'schema' => 'data',
             'sslmode' => 'prefer',
         ],
-
+        'server_pbb' => [
+            'driver' => 'pgsql',
+            'url' => env('DATABASE_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => '5432',
+            'database' => 'server_pbb',
+            'username' => 'postgres',
+            'password' => 'root',
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'schema' => 'public',
+            'sslmode' => 'prefer',
+        ],
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DATABASE_URL'),
@@ -138,16 +151,35 @@ return [
 
         'oracle' => [
             'driver' => 'oracle',
-            'host' => '10.10.6.2',
+            'host' => 'localhost',
             'port' => '1521',
-            'database' => 'PBB',
-            'service_name' => 'sismiop',
-            'username' => 'SIMPADAMA',
-            'password' => 'SIMPADAMA_17',
+            'database' => 'simpadama',
+            'service_name' => 'orcl',
+            'username' => 'sys',
+            'password' => '123',
             'charset' => '',
             'prefix' => '',
         ],
-
+        'pbb' => [
+            'driver' => 'mysql',
+            'url' => env('DATABASE_URL'),
+            'host' => env('DB_PBB_HOST', 'localhost'),
+            'port' => env('DB_PBB_PORT', '3306'),
+            'database' => env('DB_PBB_DATABASE', 'nama_database_anda'),
+            'username' => env('DB_PBB_USERNAME', 'username_cpanel_anda'),
+            'password' => env('DB_PBB_PASSWORD', 'password_database_anda'),
+            'unix_socket' => env('DB_PBB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::ATTR_TIMEOUT => 60,
+                PDO::ATTR_EMULATE_PREPARES => true,
+            ]) : [],
+        ],
     ],
 
     /*

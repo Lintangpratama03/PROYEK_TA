@@ -987,112 +987,125 @@ class GetDataController extends Controller
 
     public function getdata_tunggakan(Request $request)
     {
-        // $tahun = $request->tahun;
-        // $bulan = $request->bulan;
-        try {
-            $query = " SELECT
-            ABC.THN_PAJAK_SPPT AS tahun_sppt,
-            ABC.NOMINAL AS nominal_baku,
-            DEF.POKOK AS nominal_pokok,
-            DEF.DENDA AS nominal_denda,
-            DEF.TERIMA AS nominal_terima,
-            ABC.NOP AS nop_baku,
-            DEF.NOPBAYAR AS nop_bayar,
-            CMT.NM_KECAMATAN as kecamatan,
-            LRH.NM_KELURAHAN as kelurahan,
-            'SISMIOP' AS sumber_data,
-            SYSDATE AS tanggal_update 
-    FROM
-            (
-            SELECT
-                    THN_PAJAK_SPPT,
-                    KD_KECAMATAN,
-                    KD_KELURAHAN,
-                    COUNT( * ) AS NOP,
-                    SUM( PBB_YG_HARUS_DIBAYAR_SPPT ) AS NOMINAL 
-            FROM
-                    (
-                    SELECT
-                            KD_PROPINSI || '.' || KD_DATI2 || '.' || KD_KECAMATAN || '.' || KD_KELURAHAN || '.' || KD_BLOK || '.' || NO_URUT || '.' || KD_JNS_OP AS nopp,
-                            THN_PAJAK_SPPT,
-                            KD_KECAMATAN,
-                            KD_KELURAHAN,
-                            SUM( PBB_YG_HARUS_DIBAYAR_SPPT ) PBB_YG_HARUS_DIBAYAR_SPPT 
-                    FROM
-                            SPPT 
-                    GROUP BY
-                            KD_PROPINSI || '.' || KD_DATI2 || '.' || KD_KECAMATAN || '.' || KD_KELURAHAN || '.' || KD_BLOK || '.' || NO_URUT || '.' || KD_JNS_OP,
-                            THN_PAJAK_SPPT,
-                            KD_KECAMATAN,
-                            KD_KELURAHAN 
-                    ) q1 
-            GROUP BY
-                    THN_PAJAK_SPPT,
-                    KD_KECAMATAN,
-                    KD_KELURAHAN 
-            ) ABC
-            LEFT JOIN (
-            SELECT
-                    THN_PAJAK_SPPT,
-                    KD_KECAMATAN,
-                    KD_KELURAHAN,
-                    COUNT( * ) AS NOPBAYAR,
-                    SUM( JML_SPPT_YG_DIBAYAR - DENDA_SPPT ) AS POKOK,
-                    SUM( DENDA_SPPT ) AS DENDA,
-                    SUM( JML_SPPT_YG_DIBAYAR ) AS TERIMA 
-            FROM
-                    (
-                    SELECT
-                            KD_PROPINSI || '.' || KD_DATI2 || '.' || KD_KECAMATAN || '.' || KD_KELURAHAN || '.' || KD_BLOK || '.' || NO_URUT || '.' || KD_JNS_OP AS nopp,
-                            THN_PAJAK_SPPT,
-                            KD_KECAMATAN,
-                            KD_KELURAHAN,
-                            SUM( JML_SPPT_YG_DIBAYAR ) AS JML_SPPT_YG_DIBAYAR,
-                            SUM( DENDA_SPPT ) AS DENDA_SPPT 
-                    FROM
-                            PEMBAYARAN_SPPT 
-                    GROUP BY
-                            KD_PROPINSI || '.' || KD_DATI2 || '.' || KD_KECAMATAN || '.' || KD_KELURAHAN || '.' || KD_BLOK || '.' || NO_URUT || '.' || KD_JNS_OP,
-                            THN_PAJAK_SPPT,
-                            KD_KECAMATAN,
-                            KD_KELURAHAN 
-                    ) q2 
-            GROUP BY
-                    THN_PAJAK_SPPT,
-                    KD_KECAMATAN,
-                    KD_KELURAHAN 
-            ) DEF ON ABC.THN_PAJAK_SPPT = DEF.THN_PAJAK_SPPT 
-            AND ABC.KD_KECAMATAN = DEF.KD_KECAMATAN 
-            AND ABC.KD_KELURAHAN = DEF.KD_KELURAHAN
-            LEFT JOIN REF_KECAMATAN CMT ON ABC.KD_KECAMATAN = CMT.KD_KECAMATAN
-            LEFT JOIN REF_KELURAHAN LRH ON ABC.KD_KECAMATAN = LRH.KD_KECAMATAN 
-            AND ABC.KD_KELURAHAN = LRH.KD_KELURAHAN
-            ";
+        //         $query =
+        //             " SELECT
+        //         ABC.THN_PAJAK_SPPT AS tahun_sppt,
+        //         ABC.NOMINAL AS nominal_baku,
+        //         DEF.POKOK AS nominal_pokok,
+        //         DEF.DENDA AS nominal_denda,
+        //         DEF.TERIMA AS nominal_terima,
+        //         ABC.NOP AS nop_baku,
+        //         DEF.NOPBAYAR AS nop_bayar,
+        //         CMT.NM_KECAMATAN as kecamatan,
+        //         LRH.NM_KELURAHAN as kelurahan,
+        //         'SISMIOP' AS sumber_data,
+        //         SYSDATE AS tanggal_update 
+        // FROM
+        //         (
+        //         SELECT
+        //                 THN_PAJAK_SPPT,
+        //                 KD_KECAMATAN,
+        //                 KD_KELURAHAN,
+        //                 COUNT( * ) AS NOP,
+        //                 SUM( PBB_YG_HARUS_DIBAYAR_SPPT ) AS NOMINAL 
+        //         FROM
+        //                 (
+        //                 SELECT
+        //                         KD_PROPINSI || '.' || KD_DATI2 || '.' || KD_KECAMATAN || '.' || KD_KELURAHAN || '.' || KD_BLOK || '.' || NO_URUT || '.' || KD_JNS_OP AS nopp,
+        //                         THN_PAJAK_SPPT,
+        //                         KD_KECAMATAN,
+        //                         KD_KELURAHAN,
+        //                         SUM( PBB_YG_HARUS_DIBAYAR_SPPT ) PBB_YG_HARUS_DIBAYAR_SPPT 
+        //                 FROM
+        //                         SPPT 
+        //                 GROUP BY
+        //                         KD_PROPINSI || '.' || KD_DATI2 || '.' || KD_KECAMATAN || '.' || KD_KELURAHAN || '.' || KD_BLOK || '.' || NO_URUT || '.' || KD_JNS_OP,
+        //                         THN_PAJAK_SPPT,
+        //                         KD_KECAMATAN,
+        //                         KD_KELURAHAN 
+        //                 ) q1 
+        //         GROUP BY
+        //                 THN_PAJAK_SPPT,
+        //                 KD_KECAMATAN,
+        //                 KD_KELURAHAN 
+        //         ) ABC
+        //         LEFT JOIN (
+        //         SELECT
+        //                 THN_PAJAK_SPPT,
+        //                 KD_KECAMATAN,
+        //                 KD_KELURAHAN,
+        //                 COUNT( * ) AS NOPBAYAR,
+        //                 SUM( JML_SPPT_YG_DIBAYAR - DENDA_SPPT ) AS POKOK,
+        //                 SUM( DENDA_SPPT ) AS DENDA,
+        //                 SUM( JML_SPPT_YG_DIBAYAR ) AS TERIMA 
+        //         FROM
+        //                 (
+        //                 SELECT
+        //                         KD_PROPINSI || '.' || KD_DATI2 || '.' || KD_KECAMATAN || '.' || KD_KELURAHAN || '.' || KD_BLOK || '.' || NO_URUT || '.' || KD_JNS_OP AS nopp,
+        //                         THN_PAJAK_SPPT,
+        //                         KD_KECAMATAN,
+        //                         KD_KELURAHAN,
+        //                         SUM( JML_SPPT_YG_DIBAYAR ) AS JML_SPPT_YG_DIBAYAR,
+        //                         SUM( DENDA_SPPT ) AS DENDA_SPPT 
+        //                 FROM
+        //                         PEMBAYARAN_SPPT 
+        //                 GROUP BY
+        //                         KD_PROPINSI || '.' || KD_DATI2 || '.' || KD_KECAMATAN || '.' || KD_KELURAHAN || '.' || KD_BLOK || '.' || NO_URUT || '.' || KD_JNS_OP,
+        //                         THN_PAJAK_SPPT,
+        //                         KD_KECAMATAN,
+        //                         KD_KELURAHAN 
+        //                 ) q2 
+        //         GROUP BY
+        //                 THN_PAJAK_SPPT,
+        //                 KD_KECAMATAN,
+        //                 KD_KELURAHAN 
+        //         ) DEF ON ABC.THN_PAJAK_SPPT = DEF.THN_PAJAK_SPPT 
+        //         AND ABC.KD_KECAMATAN = DEF.KD_KECAMATAN 
+        //         AND ABC.KD_KELURAHAN = DEF.KD_KELURAHAN
+        //         LEFT JOIN REF_KECAMATAN CMT ON ABC.KD_KECAMATAN = CMT.KD_KECAMATAN
+        //         LEFT JOIN REF_KELURAHAN LRH ON ABC.KD_KECAMATAN = LRH.KD_KECAMATAN 
+        //         AND ABC.KD_KELURAHAN = LRH.KD_KELURAHAN
+        //         ";
 
-            $data = DB::connection("oracle")->select($query);
+        $tahun = $request->tahun;
+        // $bulan = $request->bulan;
+        // dd($tahun);
+
+        try {
+            $data = DB::connection('server_pbb')
+                ->table('detail_tunggakan_pbb')
+                ->where('tahun_sppt', $tahun)
+                ->get();
+
+
             // dd($data);
             foreach ($data as $key => $data) {
+                $now1 = date("Y-m-d H:i:s");
                 $get_data = [
+                    'nop' => $data->nop,
+                    'tahun_sppt' => $data->tahun_sppt,
+                    'nama_rekening' => $data->nama_rekening,
+                    'pbb_terutang' => $data->pbb_terutang,
+                    'nominal_denda' => $data->nominal_denda,
+                    'nominal_tunggakan' => $data->nominal_tunggakan,
+                    'tahun_pajak' => $data->tahun_pajak,
+                    'sumber_data' => 'server_pbb',
                     'kecamatan' => $data->kecamatan,
                     'kelurahan' => $data->kelurahan,
-                    'tahun_sppt' => $data->tahun_sppt,
-                    'nominal_baku' => $data->nominal_baku,
-                    'nominal_pokok' => $data->nominal_pokok,
-                    'nominal_denda' => $data->nominal_denda,
-                    'nominal_terima' => $data->nominal_terima,
-                    'nop_baku' => $data->nop_baku,
-                    'nop_bayar' => $data->nop_bayar,
-                    'sumber_data' => $data->sumber_data,
-                    'tanggal_update' => tgl_full($data->tanggal_update, 2),
+                    'created_at' => $data->created_at,
+                    'tanggal_update' => $now1,
                 ];
-                $cek_data = DB::table('data.tunggakan')->where('tahun_sppt', $data->tahun_sppt)->where('kecamatan', $data->kecamatan)->where('kelurahan', $data->kelurahan)->count();
+                // dd($get_data);
+                $cek_data = DB::connection('pgsql_pbb')->table('data.detail_tunggakan_pbb')->where('tahun_sppt', $data->tahun_sppt)->where('nop', $data->nop)->count();
                 // dd($cek_data);
                 if ($cek_data > 0) {
-                    DB::table('data.tunggakan')->where('tahun_sppt', $data->tahun_sppt)->where('kecamatan', $data->kecamatan)->where('kelurahan', $data->kelurahan)->delete();
+                    DB::connection('pgsql_pbb')->table('data.detail_tunggakan_pbb')->where('tahun_sppt', $data->tahun_sppt)->where('nop', $data->nop)->delete();
                 }
-                DB::table('data.tunggakan')->insert($get_data);
+                // dd($cek_data);
+                DB::connection('pgsql_pbb')->table('data.detail_tunggakan_pbb')->insert($get_data);
 
                 $now = date("Y-m-d H:i:s");
+                // dd($now);
                 $arrData = ['updated_at' => $now];
                 DB::table("data.daftar_data")->where('table', 'TUNGGAKAN')->update($arrData);
             }

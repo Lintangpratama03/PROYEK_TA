@@ -581,17 +581,17 @@
                 dataType: 'json',
                 success: function(data) {
                     const clusterColors = [{
-                            label: 'Cluster 0',
+                            label: 'Kelompok 1',
                             backgroundColor: 'rgba(0, 128, 0, 0.6)',
                             borderColor: 'rgba(0, 128, 0, 1)'
                         },
                         {
-                            label: 'Cluster 1',
+                            label: 'Kelompok 2',
                             backgroundColor: 'rgba(255, 255, 0, 0.6)',
                             borderColor: 'rgba(255, 255, 0, 1)'
                         },
                         {
-                            label: 'Cluster 2',
+                            label: 'Kelompok 3',
                             backgroundColor: 'rgba(255, 0, 0, 0.6)',
                             borderColor: 'rgba(255, 0, 0, 1)'
                         }

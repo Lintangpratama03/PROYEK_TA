@@ -190,7 +190,7 @@ class TunggakanController extends Controller
                     array(
                         "nop" => $detail,
                         "jumlah_tunggakan" => number_format($d->jumlah_tunggakan),
-                        "nominal_tunggakan" => number_format($d->nominal_tunggakan),
+                        "nominal_tunggakan" => "Rp. " . number_format($d->nominal_tunggakan),
                         "level" => $d->level,
                         "nama_subjek_pajak" => $d->nama_subjek_pajak,
                     );
@@ -843,7 +843,7 @@ class TunggakanController extends Controller
             $arr[] =
                 array(
                     "tahun_pajak" => $d->tahun_sppt,
-                    "nominal" => number_format($d->pbb_terutang),
+                    "nominal" => "Rp. " . number_format($d->pbb_terutang),
                     "nama_subjek_pajak" => $d->nama_subjek_pajak,
                     "alamat_subjek_pajak" => $d->alamat_subjek_pajak,
                     "alamat_objek_pajak" => $d->alamat_objek_pajak,
