@@ -69,13 +69,31 @@
                 <div class="col-xl-12">
                     <div class="card o-hidden">
                         <div class="card-header pb-0">
-                            <h6>Grafik Tunggakan PBB Per Tahun</h6>
+                            <h6>Grafik Tunggakan PBB Per Tahun (Nominal)</h6>
                         </div>
                         <div class="bar-chart-widget">
                             <div class="bottom-content card-body">
                                 <div class="row">
                                     <div class="col-12">
                                         <div id="chart-line"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-12">
+                <div class="col-xl-12">
+                    <div class="card o-hidden">
+                        <div class="card-header pb-0">
+                            <h6>Grafik Tunggakan PBB Per Tahun (Jumlah Tunggakan)</h6>
+                        </div>
+                        <div class="bar-chart-widget">
+                            <div class="bottom-content card-body">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div id="chart-bar"></div>
                                     </div>
                                 </div>
                             </div>
@@ -177,7 +195,7 @@
             var kecamatan = $('#kecamatan').val() || 'all';
 
             let seriesData = [{
-                name: 'Total Tunggakan',
+                name: 'Nominal Tunggakan',
                 data: tunggakan
             }];
 
@@ -211,18 +229,19 @@
                 },
                 yaxis: {
                     title: {
-                        text: 'Jumlah Tunggakan'
+                        text: 'Nominal Tunggakan'
                     },
+                    min: 0,
                     labels: {
                         formatter: function(val) {
-                            return val;
+                            return bulatkanAngka(val).replace('Rp. ', '');
                         }
                     }
                 },
                 tooltip: {
                     y: {
                         formatter: function(val) {
-                            return val;
+                            return bulatkanAngka(val);
                         }
                     }
                 }
@@ -236,12 +255,103 @@
             chart.render();
         }
 
+        function get_tunggakan_pertahun_2(startYear, endYear, kecamatan = curKecamatan, kelurahan = curKelurahan) {
+            let url_submit = "{{ route('dashboard.tunggakan.tunggakan_pertahun_total') }}";
+            $.ajax({
+                type: 'GET',
+                url: url_submit,
+                data: {
+                    "start_year": startYear,
+                    "end_year": endYear,
+                    "kecamatan": kecamatan,
+                    "kelurahan": kelurahan,
+                },
+                success: function(data) {
+                    let years = Object.keys(data.tunggakan);
+                    let tunggakanData = years.map(year => data.tunggakan[year]);
+                    chart_tunggakan_pertahun_2(tunggakanData, years);
+                },
+                error: function(data) {
+                    alert('Terjadi Kesalahan Pada Server');
+                },
+            });
+        }
+
+        function chart_tunggakan_pertahun_2(tunggakan, tahun) {
+            var kelurahan = $('#kelurahan').val() || 'all';
+            var kecamatan = $('#kecamatan').val() || 'all';
+
+            let seriesData = [{
+                name: 'Total Tunggakan',
+                data: tunggakan
+            }];
+
+            var options = {
+                series: seriesData,
+                chart: {
+                    type: 'bar',
+                    height: 360,
+                    events: {
+                        dataPointSelection: function(event, chartContext, config) {
+                            var selectedYear = tahun[config.dataPointIndex];
+                            var selectedKecamatan = kecamatan !== 'all' ? kecamatan : '';
+                            var selectedKelurahan = kelurahan !== 'all' ? kelurahan : '';
+                            var detailUrl = '{{ url('dashboard/tunggakan/detail_tunggakan_pertahun') }}' +
+                                '/' + selectedYear + '/' + selectedKecamatan + '/' + selectedKelurahan;
+                            window.location.href = detailUrl;
+                        }
+                    }
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '55%',
+                        endingShape: 'rounded'
+                    },
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                xaxis: {
+                    categories: tahun,
+                    title: {
+                        text: 'Tahun SPPT'
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Total Tunggakan'
+                    },
+                    labels: {
+                        formatter: function(val) {
+                            return val.toLocaleString('id-ID');
+                        }
+                    }
+                },
+                tooltip: {
+                    y: {
+                        formatter: function(val) {
+                            return val.toLocaleString('id-ID');
+                        }
+                    }
+                }
+            };
+
+            if (window.barChart) {
+                window.barChart.destroy(); // Destroy the existing chart if it exists
+            }
+
+            window.barChart = new ApexCharts(document.querySelector("#chart-bar"), options);
+            window.barChart.render();
+        }
+
         function filterGrafik() {
             let startYear = $('#start-year').val();
             let endYear = $('#end-year').val();
             let kecamatan = $('#kecamatan').val();
             let kelurahan = $('#kelurahan').val();
             get_tunggakan_pertahun(startYear, endYear, kecamatan, kelurahan);
+            get_tunggakan_pertahun_2(startYear, endYear, kecamatan, kelurahan);
         }
 
         $(document).ready(function() {
@@ -255,6 +365,7 @@
             // Load the data for the initial range
             let currentYear = new Date().getFullYear();
             get_tunggakan_pertahun(currentYear - 9, currentYear);
+            get_tunggakan_pertahun_2(currentYear - 9, currentYear);
         });
     </script>
 @endsection

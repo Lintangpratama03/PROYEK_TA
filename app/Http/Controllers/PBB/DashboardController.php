@@ -61,7 +61,7 @@ class DashboardController extends Controller
     public function get_tunggakan_pertahun($tahun, $kecamatan, $kelurahan)
     {
         $query = DB::connection("pgsql_pbb")->table('data.total_tunggakan_per_tahun AS a')
-            ->selectRaw("a.tahun_sppt, sum(a.total_tunggakan) as total_tunggakan");
+            ->selectRaw("a.tahun_sppt, sum(a.nominal_tunggakan) as pajak_terutang");
 
         if (!empty($tahun)) {
             $query->whereIn('a.tahun_sppt', $tahun);
@@ -82,7 +82,7 @@ class DashboardController extends Controller
         $data = ['tunggakan' => [], 'tahun' => []];
 
         foreach ($results as $value) {
-            $data['tunggakan'][$value->tahun_sppt] = $value->total_tunggakan;
+            $data['tunggakan'][$value->tahun_sppt] = $value->pajak_terutang;
             if (!in_array($value->tahun_sppt, $data['tahun'])) {
                 $data['tahun'][] = $value->tahun_sppt;
             }
@@ -91,6 +91,53 @@ class DashboardController extends Controller
         return $data;
     }
 
+    // total
+    public function tunggakan_pertahun_total(Request $request)
+    {
+        $startYear = $request->input('start_year', date('Y') - 9);
+        $endYear = $request->input('end_year', date('Y'));
+        $kecamatan = $request->input('kecamatan');
+        $kelurahan = $request->input('kelurahan');
+
+        // Generate the range of years
+        $tahun = range($startYear, $endYear);
+
+        $data = $this->get_tunggakan_pertahun_total($tahun, $kecamatan, $kelurahan);
+        return response()->json($data);
+    }
+
+    public function get_tunggakan_pertahun_total($tahun, $kecamatan, $kelurahan)
+    {
+        $query = DB::connection("pgsql_pbb")->table('data.total_tunggakan_per_tahun AS a')
+            ->selectRaw("a.tahun_sppt, sum(a.total_tunggakan) as pajak_terutang");
+
+        if (!empty($tahun)) {
+            $query->whereIn('a.tahun_sppt', $tahun);
+        }
+
+        if (!is_null($kecamatan)) {
+            $query->where('a.kecamatan', $kecamatan);
+        }
+
+        if (!is_null($kelurahan)) {
+            $query->where('a.kelurahan', $kelurahan);
+        }
+
+        $query->groupBy('a.tahun_sppt');
+        $query->orderBy('a.tahun_sppt', 'DESC');
+
+        $results = $query->get();
+        $data = ['tunggakan' => [], 'tahun' => []];
+
+        foreach ($results as $value) {
+            $data['tunggakan'][$value->tahun_sppt] = $value->pajak_terutang;
+            if (!in_array($value->tahun_sppt, $data['tahun'])) {
+                $data['tahun'][] = $value->tahun_sppt;
+            }
+        }
+        // dd($data);
+        return $data;
+    }
 
 
 

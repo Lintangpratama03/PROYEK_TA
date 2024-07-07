@@ -12,7 +12,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="icon" href="{{ asset('assets') }}/images/favicon.png" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('assets') }}/images/favicon.png" type="image/x-icon">
-    <title>SMART DASHBOARD - KOTA MADIUN</title>
+    <title>SMART DASHBOARD - KOTA SENYUM</title>
     <!-- Google font-->
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link
